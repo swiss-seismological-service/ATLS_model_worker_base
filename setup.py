@@ -1,7 +1,8 @@
 # This is <setup.py>
 # ----------------------------------------------------------------------------
 #
-# Copyright (c) 2018 by Daniel Armbruster (SED, ETHZ)
+# Copyright (c) 2018 by Daniel Armbruster (SED, ETHZ), 
+#                       Lukas Heiniger (SED, ETHZ)
 #
 # setup.py (ramsis.workers)
 #
@@ -56,6 +57,11 @@ _tests_require = []
 _data_files = [
     ('', ['LICENSE'])]
 
+_entry_points_sass = {
+    'console_scripts': [
+        'ramsis-worker-sass = ramsis.workers.SaSS.app:main', ]}
+_entry_points = _entry_points_sass.copy()
+
 _name = 'ramsis.workers'
 _version = get_version(os.path.join('ramsis', 'workers', '__init__.py'))
 _description = ('RT-RAMSIS workers component.')
@@ -72,6 +78,7 @@ if subsys == 'SaSS':
     _description = ('Model SaSS from the RT-RAMSIS workers component.')
     # TODO(damb): adjust includes/excludes
     _packages = find_packages()
+    _entry_points = _entry_points_sass
 
 
 # ----------------------------------------------------------------------------
@@ -111,6 +118,7 @@ setup(
     tests_require=_tests_require,
     include_package_data=True,
     zip_safe=False,
+    entry_points=_entry_points
     # TODO(damb): test_suite=unittest.TestCase
 )
 
