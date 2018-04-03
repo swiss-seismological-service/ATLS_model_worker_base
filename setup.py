@@ -4,14 +4,14 @@
 # Copyright (c) 2018 by Daniel Armbruster (SED, ETHZ), 
 #                       Lukas Heiniger (SED, ETHZ)
 #
-# setup.py (ramsis.workers)
+# setup.py (ramsis.worker)
 #
 # REVISIONS and CHANGES
 # 2018/04/03    V1.0   Daniel Armbruster
 #
 # ============================================================================
 """
-setup.py for ramsis.workers
+setup.py for ramsis.worker
 
 .. note:
 
@@ -60,23 +60,23 @@ _data_files = [
 
 _entry_points_sass = {
     'console_scripts': [
-        'ramsis-worker-sass = ramsis.workers.SaSS.app:main', ]}
+        'ramsis-worker-sass = ramsis.worker.SaSS.app:main', ]}
 _entry_points = _entry_points_sass.copy()
 
-_name = 'ramsis.workers'
-_version = get_version(os.path.join('ramsis', 'workers', '__init__.py'))
-_description = ('RT-RAMSIS workers component.')
+_name = 'ramsis.worker'
+_version = get_version(os.path.join('ramsis', 'worker', '__init__.py'))
+_description = ('RT-RAMSIS worker component.')
 _packages = find_packages()
 
 subsys = sys.argv[1]
 if subsys == 'SaSS':
     sys.argv.pop(1)
 
-    _name = 'ramsis.workers.SaSS'
-    _version = get_version(os.path.join('ramsis', 'workers', 'SaSS',
+    _name = 'ramsis.worker.SaSS'
+    _version = get_version(os.path.join('ramsis', 'worker', 'SaSS',
                                         '__init__.py'))
 
-    _description = ('Model SaSS from the RT-RAMSIS workers component.')
+    _description = ('Model SaSS from the RT-RAMSIS worker component.')
     # TODO(damb): adjust includes/excludes
     _packages = find_packages()
     _entry_points = _entry_points_sass
@@ -98,7 +98,7 @@ setup(
         'risk mitigation',
         'realtime',
         'seismology'],
-    url='https://gitlab.seismo.ethz.ch/indu/ramsis.workers.git',
+    url='https://gitlab.seismo.ethz.ch/indu/ramsis.worker.git',
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Environment :: Console',

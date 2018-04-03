@@ -12,10 +12,10 @@
 import sys
 import traceback
 
-from ramsis.workers import settings, utils
-from ramsis.workers.SaSS import create_app
-from ramsis.workers.utils.app import CustomParser, App, AppError
-from ramsis.workers.utils.error import Error, ExitCode
+from ramsis.worker import settings, utils
+from ramsis.worker.SaSS import create_app
+from ramsis.worker.utils.app import CustomParser, App, AppError
+from ramsis.worker.utils.error import Error, ExitCode
 
 __version__ = utils.get_version("SaSS")
 

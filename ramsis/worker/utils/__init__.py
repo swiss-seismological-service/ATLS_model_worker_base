@@ -31,7 +31,7 @@ def get_version(namespace_pkg_name=None):
             return pkg_resources.get_distribution(namespace_pkg_name).version
         raise
     except Exception: 
-        return pkg_resources.get_distribution("ramsis.workers").version
+        return pkg_resources.get_distribution("ramsis.worker").version
 
 # get_version ()
 

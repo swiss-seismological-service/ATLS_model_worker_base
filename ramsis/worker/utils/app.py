@@ -21,8 +21,8 @@ import sys
 
 from collections import OrderedDict
 
-from ramsis.workers import utils
-from ramsis.workers.utils.error import ErrorWithTraceback, ExitCode
+from ramsis.worker import utils
+from ramsis.worker.utils.error import ErrorWithTraceback, ExitCode
 
 
 # ------------------------------------------------------------------------------

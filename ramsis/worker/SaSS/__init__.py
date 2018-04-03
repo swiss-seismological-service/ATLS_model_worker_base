@@ -8,6 +8,7 @@
 # REVISION AND CHANGES
 # 2018/04/03        V0.1    Daniel Armbruster
 # =============================================================================
+
 from flask import Flask
 
 __version__ = '0.1'
