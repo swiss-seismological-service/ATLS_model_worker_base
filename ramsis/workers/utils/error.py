@@ -15,7 +15,7 @@ import enum
 
 
 class ExitCode(enum.Enum):
-    EXIT_SUCESS = 0
+    EXIT_SUCCESS = 0
     EXIT_WARNING = 1
     EXIT_ERROR = 2
 

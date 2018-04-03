@@ -13,7 +13,7 @@ General purpose configuration constants.
 """
 
 # General ramsis worker configuration
-PATH_RAMSIS_WORKER_CONFIG = 'path/to/ramsis-worker_config'
+PATH_RAMSIS_WORKER_CONFIG = '/path/to/ramsis_config'
 
 # -----------------------------------------------------------------------------
 # SaSS worker specific settings
