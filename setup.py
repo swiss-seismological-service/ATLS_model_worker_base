@@ -45,7 +45,8 @@ _authors_email = [
     'lukas.heiniger@sed.ethz.ch',
     'daniel.armbruster@sed.ethz.ch']
 
-_install_requires = []
+_install_requires = [
+    'Flask>=0.12.2', ]
 
 _extras_require = {'doc': [
     "epydoc==3.0.1",
