@@ -8,34 +8,63 @@
 # REVISION AND CHANGES
 # 2018/04/03        V0.1    Daniel Armbruster
 # =============================================================================
+"""
+RAMSIS SaSS (Shapiro and Smothed Seismicity) worker.
+"""
 
+import os
 import sys
 import traceback
 
+from flask_restful import Api
+
+from ramsis.utils.app import CustomParser, App, AppError
+from ramsis.utils.error import Error, ExitCode
 from ramsis.worker import settings, utils
 from ramsis.worker.SaSS import create_app
-from ramsis.worker.utils.app import CustomParser, App, AppError
-from ramsis.worker.utils.error import Error, ExitCode
+from ramsis.worker.SaSS.task import SaSSTask
+from ramsis.worker.SaSS.schema import WorkerInputMessageSchema
+from ramsis.worker.utils.parser import parser
+from ramsis.worker.utils.resource import AsyncWorkerResource
 
 __version__ = utils.get_version("SaSS")
 
 
+# ----------------------------------------------------------------------------
+class SaSSWorkerResource(AsyncWorkerResource):
+    """
+    Concrete implementation of an asynchronous SaSS worker resource.
+    """
+    TASK = SaSSTask('SaSS',
+                    func_nargout=1,
+                    matlab_opts='-sd {}'.format(
+                        os.path.join(
+                            os.path.dirname(os.path.realpath(__file__)),
+                            'model')))
+
+    def _parse(self, request, locations=('json', )):
+        return parser.parse(WorkerInputMessageSchema(), request,
+                            locations=locations)
+
+# class SaSSWorkerResource
+
+
 class SaSSWorkerWebservice(App):
     """
-    A webservice implementing the SaSS model.
+    A webservice implementing the SaSS (Shapiro and Smothed Seismicity) model.
     """
 
     def build_parser(self, parents=[]):
         """
-        Set up the stationlite commandline argument parser.
+        Set up the commandline argument parser.
 
         :param list parents: list of parent parsers
         :returns: parser
         :rtype: :py:class:`argparse.ArgumentParser`
         """
         parser = CustomParser(
-            prog="eida-stationlite",
-            description='Launch EIDA stationlite web service.',
+            prog="ramsis-worker-sass",
+            description='Launch SaSS worker webservice.',
             parents=parents)
         # optional arguments
         parser.add_argument('--version', '-V', action='version',
@@ -83,6 +112,11 @@ class SaSSWorkerWebservice(App):
         app_config = {
             'PORT': self.args.port, }
         app = create_app(config_dict=app_config)
+
+        # configure webservice API with resource
+        api = Api(app)
+        api.add_resource(SaSSWorkerResource,
+                         settings.PATH_RAMSIS_WORKER_SCENARIOS)
 
         return app
 

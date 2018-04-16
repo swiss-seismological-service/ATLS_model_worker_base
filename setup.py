@@ -1,7 +1,7 @@
 # This is <setup.py>
 # ----------------------------------------------------------------------------
 #
-# Copyright (c) 2018 by Daniel Armbruster (SED, ETHZ), 
+# Copyright (c) 2018 by Daniel Armbruster (SED, ETHZ),
 #                       Lukas Heiniger (SED, ETHZ)
 #
 # setup.py (ramsis.worker)
@@ -21,7 +21,7 @@ setup.py for ramsis.worker
 
 import os
 import sys
-from setuptools import setup, find_packages
+from setuptools import setup
 
 
 if sys.version_info[:2] < (3, 6):
@@ -46,7 +46,10 @@ _authors_email = [
     'daniel.armbruster@sed.ethz.ch']
 
 _install_requires = [
-    'Flask>=0.12.2', ]
+    'Flask>=0.12.2',
+    'Flask-RESTful>=0.3.6',
+    'webargs>=2.1',
+    "ramsis.utils==0.1", ]
 
 _extras_require = {'doc': [
     "epydoc==3.0.1",
@@ -54,6 +57,10 @@ _extras_require = {'doc': [
     "sphinx-rtd-theme==0.1.9", ]}
 
 _tests_require = []
+
+_dependency_links = [(
+    "git+https://gitlab.seismo.ethz.ch/indu/ramsis.utils.git"
+    "#egg=ramsis.utils-0.1"), ]
 
 _data_files = [
     ('', ['LICENSE'])]
@@ -66,19 +73,22 @@ _entry_points = _entry_points_sass.copy()
 _name = 'ramsis.worker'
 _version = get_version(os.path.join('ramsis', 'worker', '__init__.py'))
 _description = ('RT-RAMSIS worker component.')
-_packages = find_packages()
+_packages = ['ramsis.worker',
+             'ramsis.worker.utils',
+             'ramsis.worker.SaSS', ]
 
 subsys = sys.argv[1]
 if subsys == 'SaSS':
     sys.argv.pop(1)
 
-    _name = 'ramsis.worker.SaSS'
     _version = get_version(os.path.join('ramsis', 'worker', 'SaSS',
                                         '__init__.py'))
 
     _description = ('Model SaSS from the RT-RAMSIS worker component.')
     # TODO(damb): adjust includes/excludes
-    _packages = find_packages()
+    _packages = ['ramsis.worker',
+                 'ramsis.worker.utils',
+                 'ramsis.worker.SaSS', ]
     _entry_points = _entry_points_sass
 
 
@@ -114,6 +124,7 @@ setup(
     platforms=['Linux', ],
     packages=_packages,
     data_files=_data_files,
+    dependency_links=_dependency_links,
     install_requires=_install_requires,
     extras_require=_extras_require,
     tests_require=_tests_require,

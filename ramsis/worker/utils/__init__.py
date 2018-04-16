@@ -12,8 +12,6 @@
 General purpose ramsis.workers utilities
 """
 
-import argparse
-import os
 import pkg_resources
 
 # -----------------------------------------------------------------------------
@@ -30,30 +28,17 @@ def get_version(namespace_pkg_name=None):
         if namespace_pkg_name:
             return pkg_resources.get_distribution(namespace_pkg_name).version
         raise
-    except Exception: 
+    except Exception:
         return pkg_resources.get_distribution("ramsis.worker").version
 
 # get_version ()
 
-def realpath(p):
-    return os.path.realpath(os.path.expanduser(p))
-
-# realpath ()
-
-def real_file_path(path):
+def escape_newline(s):
     """
-    check if file exists
-    :returns: realpath in case the file exists
-    :rtype: str
-    :raises argparse.ArgumentTypeError: if file does not exist
+    Escape newline characters.
+
+    :param str s: String to be processed.
     """
-    path = realpath(path)
-    if not os.path.isfile(path):
-        raise argparse.ArgumentTypeError(
-            '{0!r} is not a valid file path.'.format(path))
-    return path
-
-# real_file_path ()
-
+    return s.replace('\n','\\n').replace('\r','\\r')
 
 # ---- END OF <__init__.py> ----
