@@ -8,12 +8,12 @@ resource API e.g. by means of handling an instance of a concrete
 
 Hence, to implement a concrete worker follow this recipe:
 
-    1. Provide a concrete implementation of `ramsis.worker.utils.Task`.
-    2. Provide a concrete implementation of
-    `ramsis.worker.utils.AbstractWorkerResource`.
-    3. Worker-side you should use a specified implementation of
-    `ramsis.utils.protocol.WorkerInputMessage`. Define a custom model specific
-    schema for `model_parameters` to allow parameter validation.
+1. Provide a concrete implementation of `ramsis.worker.utils.Task`.
+2. Provide a concrete implementation of
+`ramsis.worker.utils.AbstractWorkerResource`.
+3. Worker-side you should use a specified implementation of
+`ramsis.utils.protocol.WorkerInputMessage`. Define a custom model specific
+schema for `model_parameters` to allow parameter validation.
 
 The worker communication protocol is standardized. That is why model
 configuration parameters are passed to the worker as a dictionary.
