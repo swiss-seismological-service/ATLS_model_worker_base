@@ -1,4 +1,18 @@
-# RAMSIS worker implementation
+# RAMSIS Worker 
+
+A RAMSIS Worker controls a forecast model on behalf of RAMSIS Core. It
+receives requests over a RESTful API, starts or stops its model
+and returns results and state information whenever requested from the core.
+
+A Worker consists of three parts:
+
+1. A *resource* which provides the web service API.
+2. A *task* which contains the model specific control mechanism
+3. A *schema* to deserialize model specific parameters included in the input
+message
+
+
+# Implementation
 
 Since the worker API makes use of [Flask-RESTful]
 (https://flask-restful.readthedocs.io/en/latest/) workers are resource
