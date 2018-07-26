@@ -20,14 +20,12 @@ from flask_restful import Api
 
 from ramsis.utils.app import CustomParser, App, AppError
 from ramsis.utils.error import Error, ExitCode
-from ramsis.worker import settings, utils
-from ramsis.worker.SaSS import create_app
+from ramsis.worker import settings
+from ramsis.worker.SaSS import __version__, create_app
 from ramsis.worker.SaSS.task import SaSSTask
 from ramsis.worker.SaSS.schema import WorkerInputMessageSchema
 from ramsis.worker.utils.parser import parser
 from ramsis.worker.utils.resource import AsyncWorkerResource
-
-__version__ = utils.get_version("SaSS")
 
 
 # ----------------------------------------------------------------------------
