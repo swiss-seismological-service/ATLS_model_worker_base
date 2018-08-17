@@ -1,34 +1,33 @@
-# This is <app.py>
+# This is <db_init.py>
 # -----------------------------------------------------------------------------
-#
-# Purpose: SaSS worker application facilities.
 #
 # Copyright (c) Daniel Armbruster (SED, ETH), Lukas Heiniger (SED, ETH)
 #
 # REVISION AND CHANGES
-# 2018/04/03        V0.1    Daniel Armbruster
+# 2018/08/17    V0.1    Daniel Armbruster
 # =============================================================================
 """
-RAMSIS SaSS (Shapiro and Smothed Seismicity) worker.
+Initialize a RT-RAMSIS worker DB.
 """
 
-import argparse
 import sys
 import traceback
+
+from sqlalchemy import create_engine
 
 from ramsis.utils.app import CustomParser, App, AppError
 from ramsis.utils.error import Error, ExitCode
 from ramsis.worker import settings
-from ramsis.worker.utils import escape_newline, url
-from ramsis.worker.SaSS import __version__, create_app
+from ramsis.worker.utils import url, orm
+
+__version__ = '0.1'
 
 
 # ----------------------------------------------------------------------------
-class SaSSWorkerWebservice(App):
+class DBInitApp(App):
     """
-    A webservice implementing the SaSS (Shapiro and Smothed Seismicity) model.
+    Utility application initializing :py:mod:`ramsis.worker` specific DBs.
     """
-
     def build_parser(self, parents=[]):
         """
         Set up the commandline argument parser.
@@ -38,15 +37,12 @@ class SaSSWorkerWebservice(App):
         :rtype: :py:class:`argparse.ArgumentParser`
         """
         parser = CustomParser(
-            prog="ramsis-worker-sass",
-            description='Launch SaSS worker webservice.',
+            prog="ramsis-worker-db-init",
+            description='Initialize a DB for RT-RAMSIS workers.',
             parents=parents)
         # optional arguments
         parser.add_argument('--version', '-V', action='version',
                             version='%(prog)s version ' + __version__)
-        parser.add_argument('-p', '--port', metavar='PORT', type=int,
-                            default=5000,
-                            help='server port')
 
         # positional arguments
         parser.add_argument('db_url', type=url, metavar='URL',
@@ -64,11 +60,14 @@ class SaSSWorkerWebservice(App):
         """
         exit_code = ExitCode.EXIT_SUCCESS
         try:
-            app = self.setup_app()
-            self.logger.debug('Routes configured: {}'.format(
-                escape_newline(str(app.url_map))))
-            self.logger.info('Serving with local WSGI server.')
-            app.run(threaded=True, debug=True, port=self.args.port)
+            engine = create_engine(self.args.db_url)
+
+            # create db tables
+            self.logger.debug('Creating database tables ...')
+            orm.ORMBase.metadata.create_all(engine)
+
+            self.logger.info(
+                "DB '{}' successfully initialized.".format(self.args.db_url))
 
         except Error as err:
             self.logger.error(err)
@@ -85,39 +84,22 @@ class SaSSWorkerWebservice(App):
 
     # run ()
 
-    def setup_app(self):
-        """
-        Setup and configure the Flask app with its API.
+# class DBInit
 
-        :returns: The configured Flask application instance.
-        :rtype :py:class:`flask.Flask`:
-        """
-        app_config = {
-            'PORT': self.args.port,
-            'SQLALCHEMY_DATABASE_URI': self.args.db_url,
-            'SQLALCHEMY_TRACK_MODIFICATIONS': False
-        }
-        app = create_app(config_dict=app_config)
-
-        return app
-
-    # setup_app ()
-
-# class SaSSWorkerWebservice
 
 # ----------------------------------------------------------------------------
 def main():
     """
-    main function for SaSS model worker webservice
+    :py:class:`ramsis.worker.utils.db.DBInitApp` wrapper.
     """
 
-    app = SaSSWorkerWebservice(log_id='RAMSIS-SASS')
+    app = DBInitApp(log_id='RAMSIS')
 
     try:
         app.configure(
             settings.PATH_RAMSIS_WORKER_CONFIG,
             positional_required_args=['db_url'],
-            config_section=settings.RAMSIS_WORKER_SASS_CONFIG_SECTION)
+            config_section=settings.RAMSIS_WORKER_DB_CONFIG_SECTION)
     except AppError as err:
         # handle errors during the application configuration
         print('ERROR: Application configuration failed "%s".' % err,
@@ -133,4 +115,4 @@ def main():
 if __name__ == '__main__':
     main()
 
-# ---- END OF <app.py> ----
+# ---- END OF <db_init.py> ----

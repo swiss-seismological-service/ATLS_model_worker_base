@@ -14,217 +14,287 @@ Resource facilities for worker webservices.
 
 import logging
 
-from flask import request
+from multiprocessing import Pool
+
+from flask import request, current_app, g
+from flask import make_response as _make_response
 from flask_restful import Resource
-from werkzeug.exceptions import HTTPException
 
 
 from ramsis.utils.error import Error
-from ramsis.utils.protocol import StatusCode, WorkerInputMessageSchema
-from ramsis.worker.utils import escape_newline
+from ramsis.utils.protocol import (StatusCode, WorkerInputMessageSchema,
+                                   WorkerOutputMessage,
+                                   WorkerOutputMessageSchema,
+                                   MIMETYPE)
+from ramsis.worker.utils import orm
+from ramsis.worker.utils.task import Task
 from ramsis.worker.utils.parser import parser
-from ramsis.worker.utils.task import TaskError
 
 
+# -----------------------------------------------------------------------------
 class WorkerError(Error):
     """Base worker error ({})."""
 
-
-# TODO(damb):
-#   - add output format to protocol
-#   - serialize WorkerOutputMessage
+class CannotCreateTaskModel(WorkerError):
+    """Error while creating task model ({})."""
 
 # -----------------------------------------------------------------------------
-class AbstractWorkerResource(Resource):
+def make_response(msg, status_code=None, serializer=WorkerOutputMessageSchema,
+                  **kwargs):
     """
-    Abstract base class for a worker resource
+    Factory function creating :py:class:`flask.Flask.response_class.
+
+    :param msg: Serialized message the response is created from
+    :type msg: :py:class:`ramsis.utils.protocol.WorkerOutputMessage`
+    :param status_code: Force HTTP status code. If :code:`None` the status code
+        is extracted from :code:`msg`
+    :type status_code: int or None
+    :param serializer: Schema to be used for serialization
+    :type serializer: :py:class:`marshmallow.Schema`
+    :param kwargs: Keyword value parameters passed to the serializer
+    :returns: HTTP response
+    :rtype: :py:class:`flask.Flask.response`
     """
-    LOGGER = 'ramsis.worker_resource'
-    TASK = None
+    try:
+        if status_code is None:
+            status_code = 200
+            try:
+                status_code = int(msg.status_code)
+            except AttributeError:
+                if not isinstance(msg, list):
+                    raise
 
-    # state storage - this variable is intended to be accessed by means of the
-    # corresponding classmethods
-    # TODO(damb): Check if the state is handled properly if two workers are
-    # running using this base class.
-    _STATE = None
+        resp = _make_response(serializer(**kwargs).dumps(msg), status_code)
+        resp.headers['Content-Type'] = MIMETYPE
+        #if msg.warning:
+        #    resp.headers['Warning'] = '299 {}'.format(msg.warning)
+        return resp
 
-    def __init__(self, logger=None):
-        self.logger = (logging.getLogger(logger) if logger else
-                       logging.getLogger(self.LOGGER))
+    except Exception as err:
+        raise WorkerError(str(err))
 
-    # __init__ ()
+# make_response ()
 
-    @classmethod
-    def state(cls):
-        return cls._STATE
+# -----------------------------------------------------------------------------
+class RamsisWorkerBaseResource(Resource):
+    """
+    Base class for *RT-RAMSIS* worker resources.
 
-    @classmethod
-    def update_state(cls, val):
-        cls._STATE = val
+    :param db: :py:class:`flask_sqlalchemy.SQLAlchemy` database instance
+    :type db: :py:class:`flask_sqlalchemy.SQLAlchemy`
+    """
 
-    @classmethod
-    def task(cls):
-        if cls.TASK is None:
-            raise WorkerError('TASK undefined.')
-        return cls.TASK
+    LOGGER = 'ramsis.worker.worker_resource'
+
+    def __init__(self, db):
+        self.logger = logging.getLogger(self.LOGGER)
+        self._db = db
 
     def get(self):
+        return 'Method not allowed.', StatusCode.HTTPMethodNotAllowed.value
+
+    def post(self):
         return 'Method not allowed.', StatusCode.HTTPMethodNotAllowed.value
 
     def delete(self):
         return 'Method not allowed.', StatusCode.HTTPMethodNotAllowed.value
 
-    def post(self):
-        return 'Method not allowed.', StatusCode.HTTPMethodNotAllowed.value
+# class RamsisWorkerBaseResource
 
-    def _parse(self, request, locations=('json',)):
-        """
-        Parse the arguments for a model run. Since `model_parameters` are
-        implemented as a simple :cls:`marshmallow.fields.Dict` i.e.
-
-        ..code::
-
-            model_parameters =
-            marshmallow.fields.Dict(keys=marshmallow.fields.Str())
-
-        by default no validation is performed on model parameters. However,
-        overloading this template function and using a model specific schema
-        allows the validation of `model_parameters`.
-        """
-        return parser.parse(WorkerInputMessageSchema(), request,
-                            locations=locations)
-
-# class WorkerResource
-
-
-class AsyncWorkerResource(AbstractWorkerResource):
+class RamsisWorkerResource(RamsisWorkerBaseResource):
     """
-    Abstract resource base class for an asyncronous operating worker.
+    *RT-RAMSIS* worker resource implementation.
     """
-    LOGGER = 'ramsis.worker_resource_async'
 
-    def __init__(self, logger=None):
-        logger = logger if logger else self.LOGGER
-        super().__init__(logger=logger)
+    def get(self, task_id):
+        """
+        Implementation of HTTP :code:`GET` method. Returns a specific task.
+        """
+        self.logger.debug(
+            'Received HTTP GET request (task_id: {}).'.format(task_id))
+
+        session = self._db.session
+        try:
+            task = session.query(orm.Task).\
+                filter(orm.Task.id==task_id).\
+                one()
+
+            msg = WorkerOutputMessage.from_task(task)
+            self.logger.debug('Response msg: {}'.format(msg))
+
+            return make_response(msg)
+
+        except Exception as err:
+            session.rollback()
+            raise err
+        finally:
+            session.close()
+
+    # get ()
+
+    def delete(self, task_id):
+        """
+        Implementation of HTTP :code:`DELETE` method. Removes a specific task.
+        """
+        self.logger.debug(
+            'Received HTTP DELETE request (task_id: {}).'.format(task_id))
+
+        session = self._db.session
+        try:
+            task = session.query(orm.Task).\
+                filter(orm.Task.id==task_id).\
+                one()
+
+            msg = WorkerOutputMessage.from_task(task)
+            self.logger.debug('Response msg: {}'.format(msg))
+
+            session.delete(task)
+            session.commit()
+
+            return make_response(msg, status_code=200)
+
+        except Exception as err:
+            session.rollback()
+            raise err
+        finally:
+            session.close()
+
+    # delete ()
+
+# class RamsisWorkerResource
+
+
+class RamsisWorkerListResource(RamsisWorkerBaseResource):
+    """
+    Implementation of a *stateless* *RT-RAMSIS* worker resource. The resource
+    ships a pool of worker processes.
+
+    By default model results are written to a DB.
+    """
+    POOL = Pool(processes=5)
+
+    def __init__(self, model, db):
+        super().__init__(db=db)
+
+        self._model = model
 
     # __init__ ()
 
+    @classmethod
+    def _pool(cls):
+        if cls.POOL is None:
+            raise WorkerError('POOL undefined.')
+        return cls.POOL
+
+    @property
+    def request_id(self):
+        if getattr(g, 'request_id', None):
+            return g.request_id
+        raise KeyError("Missing key 'request_id' in application context.")
+
     def get(self):
         """
-        HTTP GET method of the async worker webservice API.
-
-        If available returns results else HTTP status code 204.
+        Implementation of HTTP :code:`GET` method. Returns all available
+        tasks.
         """
-        if self.state() is None:
-            self.logger.debug('No model task currently running.')
-            return '', StatusCode.CurrentlyNoTask.value
+        self.logger.debug('Received HTTP GET request.')
 
-        return_code = self.state().poll()
-        if return_code is None:
-            self.logger.debug('Task {0!r} is still running ...'.format(
-                self.state()))
-            # TODO(damb): Standardize ramsis client return values
-            return ({'message': StatusCode.TaskCurrentlyProcessing.name,
-                     'result': []}, StatusCode.TaskCurrentlyProcessing.value)
+        session = self._db.session
+        try:
+            tasks = session.query(orm.Task).\
+                all()
 
-        elif return_code == 0:
-            self.logger.debug('Collecting results from task {0!r} ...'.format(
-                self.state()))
-            if self.state().stdout:
-                self.logger.debug(
-                    'Task {!r} STDOUT: {}'.format(
-                        self.state(),
-                        escape_newline(str(self.state().stdout))))
-            try:
-                # NOTE(damb): Results are assigned during the first GET call
-                # after the task finished.
-                # TODO(damb): serialize results
-                result = self.state().result
+            msgs = [WorkerOutputMessage.from_task(t) for t in tasks]
+            self.logger.debug('Response msgs: {}'.format(msgs))
 
-            except Exception as err:
-                msg = 'Failed to serialize results ({})'.format(err)
-                self.logger.warning(msg)
-                # TODO(damb): Standardize ramsis client return values
-                return ({'message': msg,
-                         'result': []}, StatusCode.WorkerError.value)
+            return make_response(msgs, serializer=WorkerOutputMessageSchema,
+                                 many=True)
 
-            # reset and prepare for the next run
-            self.state().reset()
-            self.update_state(None)
-
-        else:
-            self.logger.warning('Task {!r} execution failed.'.format(
-                self.state()))
-            if self.state().stderr:
-                self.logger.debug(
-                    'Task {!r} STDERR: {}'.format(
-                        self.state(),
-                        escape_newline(str(self.state().stderr))))
-            self.state().reset()
-            self.update_state(None)
-            return ({'message': StatusCode.TaskProcessingError.name,
-                     'result': []}, StatusCode.TaskProcessingError.value)
-
-        # TODO(damb): Standardize ramsis client return values
-        return ({'message': StatusCode.TaskCompleted.name,
-                 'result': [{'rate_prediction': result}]},
-                StatusCode.TaskCompleted.value)
+        except Exception as err:
+            session.rollback()
+            raise err
+        finally:
+            session.close()
 
     # get ()
 
     def post(self):
         """
-        HTTP PUT method of the async worker webservice API.
+        Implementation of HTTP :code:`POST` method. Maps a task to the worker
+        pool.
         """
+        self.logger.debug(
+            'Received HTTP POST request (Model: {!r}, task_id: {}).'.format(
+                self._model, self.request_id))
 
-        self.logger.debug('Received HTTP PUT request ({}).'.format(
-                          self.task()))
-        if self.state():
-            if self.state().poll() is None:
-                msg = 'Previous task has not finished yet.'
-            elif self.state().poll() == 0 and self.state().result:
-                msg = 'Previous results not fetched yet.'
+        # parse arguments
+        args = self._parse(request, locations=('json',))
 
-            self.logger.warning(msg)
-            # TODO(damb): Standardize ramsis client return values
-            return ({'message': msg,
-                     'result': []}, StatusCode.PreviousTaskNotCompleted.value)
-
+        task_id = self.request_id
+        # XXX(damb): register a new orm.Task at DB
+        session = self._db.session
         try:
-            # parse arguments
-            args = self._parse(request, locations=('json',))
+            # XXX(damb): create a new orm.Model if not existant
+            m_model = self._model.orm()
+            existing_m_model = \
+                session.query(orm.Model).\
+                filter(orm.Model.name==m_model.name).\
+                filter(orm.Model.description==m_model.description).\
+                one_or_none()
+
+            if existing_m_model:
+                m_model = existing_m_model
+
+            m_task = orm.Task.new(id=task_id, model=m_model)
+
+            session.add(m_task)
+            session.commit()
+
             self.logger.debug(
-                'Configuring task {!r} with parameters {!r} ...'.format(
-                    self.task(), args))
-            self.task().configure(**args['model_parameters'])
-            self.logger.info('Executing task {0!r} ...'.format(self.task()))
-            # execute the task
-            # XXX(damb): The task itself must be implemented in a way such that
-            # it can be executed asynchronously.
-            self.task()()
-            self.update_state(self.task())
-
-        except TaskError as err:
-            self.logger.warning('{}'.format(err))
-            self.update_state(None)
-            return ({'message': str(err),
-                     'result': []}, StatusCode.WorkerError.value)
-        except HTTPException as err:
-            self.logger.warning('{}'.format(err))
-            # TODO(damb): Return appropiate output message.
-            raise err
+                '{!r}: {!r} successfully created.'.format(self, m_task))
         except Exception as err:
-            self.logger.error('{}'.format(err))
-            self.update_state(None)
-            return ({'message': str(err),
-                     'result': []}, StatusCode.WorkerError.value)
+            session.rollback()
+            raise CannotCreateTaskModel(err)
+        finally:
+            session.close()
 
-        return ({'message': StatusCode.TaskAccepted.name,
-                 'result': []}, StatusCode.TaskAccepted.value)
+        self.logger.debug(
+            'Executing {!r} task ({}) with parameters {!r} ...'.format(
+                self._model, task_id, args))
+
+        t = Task(model=self._model(), task_id=task_id,
+                 db_url=current_app.config['SQLALCHEMY_DATABASE_URI'], **args)
+
+        # TODO TODO TODO(damb): Register a task @ DB.
+        _ = self._pool().apply_async(t) # noqa
+
+        msg = WorkerOutputMessage.accepted(task_id)
+        self.logger.debug('Task ({}) accepted.'.format(task_id))
+
+        return make_response(msg)
 
     # post ()
 
-# class AsyncWorkerResource
+    def _parse(self, request, locations=('json',)):
+        """
+        Parse the arguments for a model run. Since :code:`model_parameters` are
+        implemented as a simple :py:class:`marshmallow.fields.Dict` i.e.
+
+        .. code::
+
+            model_parameters =
+                marshmallow.fields.Dict(keys=marshmallow.fields.Str())
+
+        by default no validation is performed on model parameters. However,
+        overloading this template function and using a model specific schema
+        allows the validation of the :code:`model_parameters` property.
+        """
+        return parser.parse(WorkerInputMessageSchema(), request,
+                            locations=locations)
+
+    # _parse ()
+
+# class RamsisWorkerListResource
 
 
 # ---- END OF <resource.py> ----

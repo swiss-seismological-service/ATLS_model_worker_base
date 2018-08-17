@@ -41,7 +41,7 @@ class SaSSTaskStream(io.StringIO, TaskStream):
 # -----------------------------------------------------------------------------
 class SaSSTask(AsyncTask):
     """
-    Concrete implementation of a task managing the SaSS model. The task is
+    Concrete implementation of a task managing the *SaSS* model. The task is
     implemented as an asynchronous MATLAB task.
 
     The task currently makes use of the `MATLAB Python API
@@ -53,12 +53,13 @@ class SaSSTask(AsyncTask):
     LOGGER = 'ramsis.worker.sass_task'
 
     def __init__(self, matlab_func, func_nargout=1, matlab_opts=''):
+        super().__init__()
         self.engine = matlab.engine.start_matlab(matlab_opts)
         self._func = matlab_func
         self._func_nargout = func_nargout
         self._func_args = None
 
-        super().__init__(logger=self.LOGGER)
+    # __init__ ()
 
     @property
     def result(self):
@@ -66,11 +67,11 @@ class SaSSTask(AsyncTask):
 
     @property
     def stdout(self):
-        return str(self._stdout)
+        return self._stdout
 
     @property
     def stderr(self):
-        return str(self._stderr)
+        return self._stderr
 
     def configure(self, **kwargs):
         """
@@ -78,7 +79,7 @@ class SaSSTask(AsyncTask):
         """
         if not self.is_configured:
             # TODO(damb): The task has to order the kwargs and add it to the
-            # _func_args list appropriately.
+            # _func_args list appropriately. This behaviour is MATLAB specific.
             try:
                 self._func_args = kwargs.values()
             except KeyError as err:
@@ -117,5 +118,7 @@ class SaSSTask(AsyncTask):
                                     stderr=self._stderr)
 
     # _run ()
+
+# class SaSSTask
 
 # ---- END OF <task.py> ----

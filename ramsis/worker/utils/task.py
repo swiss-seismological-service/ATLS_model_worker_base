@@ -12,129 +12,202 @@
 Task facilities.
 """
 
+import functools
 import logging
+import uuid
 
-from ramsis.utils.error import Error
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+from ramsis.utils.error import ErrorWithTraceback
+from ramsis.utils.protocol import StatusCode
+from ramsis.worker.utils import escape_newline
+from ramsis.worker.utils import orm
 
 
 # -----------------------------------------------------------------------------
-class TaskError(Error):
+class TaskError(ErrorWithTraceback):
     """Base task error ({})."""
 
-class NotConfigured(TaskError):
-    """Missing task configuration."""
+class NoTaskModel(TaskError):
+    """Task model not available ({})."""
 
-class InvalidConfiguration(TaskError):
-    """Invalid configuration ({})."""
+# -----------------------------------------------------------------------------
+def with_exception_handling(func):
+    """
+    Method decorator catching unhandled :py:class:`ramsis.worker.utils.Task`
+    exceptions. Exceptions are simply logged.
+    """
+    @functools.wraps(func)
+    def decorator(self, *args, **kwargs):
+        try:
+            return func(self, *args, **kwargs)
+        except Exception as err:
+            msg = 'TaskError ({}): {}:{}.'.format(type(self).__name__,
+                                                  type(err).__name__, err)
 
+            self.logger.critical(escape_newline(msg))
 
-class TaskStream(object):
-    """ABC for stream task stream objects."""
+    return decorator
 
-    def __str__(self):
-        return ''
+# with_exception_handling ()
+
+def with_logging(func):
+    """
+    Method decorator logging the :py:class:`Model`'s state.
+    """
+    # TODO(damb): Avoid repeating string content.
+    @functools.wraps(func)
+    def decorator(self, *args, **kwargs):
+
+        _model = self._model
+        self.logger.debug('{!r}: Executing {!r} (args={}, kwargs={})'.format(
+            self, _model, self._task_id, kwargs))
+        retval = func(self, *args, **kwargs)
+        self.logger.debug(
+            '{!r}: {!r} execution finished (result={})).'.format(
+                self, _model, retval))
+
+        if _model.stdout:
+            self.logger.info(escape_newline('{!r}: STDOUT ({!r}): {}'.format(
+                self, _model, _model.stdout)))
+        if _model.stderr:
+            self.logger.warning(
+                escape_newline('{!r}: STDERR ({}): {}'.format(
+                    self, _model, _model.stderr)))
+
+        return retval
+
+    return decorator
+
+# with_logging ()
 
 
 # -----------------------------------------------------------------------------
 class Task(object):
     """
-    Abstract base class for a task.
+    :py:class:`Task` implementation running
+    :py:class:`ramsis.worker.utils.model.Model`s. Provides a top-level class
+    for easier pickling. In addition acts as a controller for the task's
+    *actual* model (not to be confused with the scientific model).
+
+    :py:class:`ramsis.worker.utils.model.ModelResult`s are written to a
+    database.
+
+    :param model: :py:class:`ramsis.worker.utils.Model` instance to be run
+    :type model: :py:class:`ramsis.worker.utils.Model`
+    :param db_session: Database session instance
+    :type db_session: :py:class:`sqlalchemy.orm.session.Session`
+    :param task_id: Task identifier
+    :type task_id: :py:class:`ùuid.UUID`
+    :param kwargs: Keyword value parameters used when running the
+        :py:class:`ramsis.worker.utils.Model`.
     """
 
     LOGGER = 'ramsis.worker.task'
 
-    def __init__(self, logger=None):
-        self.is_configured = False
-        self._stdout = None
-        self._stderr = None
+    def __init__(self, model, db_url, task_id=None, **kwargs):
+        self.logger = logging.getLogger(self.LOGGER)
 
-        self.logger = (logging.getLogger(logger) if logger else
-                       logging.getLogger(self.LOGGER))
+        self._model = model
+        self._db_url = db_url
+        self._task_id = task_id if task_id is not None else uuid.uuid4()
+        self._task_args = kwargs
 
     # __init__ ()
 
     @property
-    def result(self):
-        """Task result query function."""
-        raise NotImplementedError
+    def id(self):
+        return self._task_id
 
-    @property
-    def returncode(self):
-        """Task returncode query function."""
-        raise NotImplementedError
+    def __getstate__(self):
+        # prevent pickling errors for loggers
+        d = dict(self.__dict__)
+        if 'logger' in d.keys():
+            d['logger'] = d['logger'].name
+        return d
 
-    @property
-    def stdout(self):
-        return None
+    # __getstate__ ()
 
-    @property
-    def stderr(self):
-        return None
+    def __setstate__(self, d):
+        if 'logger' in d.keys():
+            d['logger'] = logging.getLogger(d['logger'])
+            self.__dict__.update(d)
 
-    def poll(self):
+    # __setstate__ ()
+
+    @with_logging
+    def _run(self, **kwargs):
         """
-        Poll the status of a task. For a synchronous task the function
-        should always return `None`.
-        """
-        return None
+        Execute a model with a concrete parameter configuration.
 
-    def configure(self, **kwargs):
+        :param kwargs: Extra keyword value parameters passed to the
+            :py:class:`ramsis.worker.utils.Model` instance, additionally.
         """
-        Configure a task.
+        return self._model(task_id=self.id, **self._task_args, **kwargs)
 
-        :param **kwargs: Function keyword arguments passed to the
-        function to be called.
-        """
-        raise NotImplementedError
+    @with_exception_handling
+    def __call__(self, **kwargs):
 
-    def reset(self):
-        """
-        Reininitialize a task.
-        """
-        raise NotImplementedError
+        def create_session(db_engine):
+            return sessionmaker(bind=db_engine)()
 
-    def _run(self):
-        """
-        Run a task.
-        """
-        raise NotImplementedError
+        db_engine = create_engine(self._db_url)
+        session = create_session(db_engine)
+        # XXX(damb): fetch orm.Task from DB and update task state
+        try:
+            m_task = session.query(orm.Task).\
+                filter(orm.Task.id==self.id).\
+                one()
 
-    def __call__(self):
-        self._run()
+            m_task.status = StatusCode.TaskCurrentlyProcessing.name
+            m_task.status_code = StatusCode.TaskCurrentlyProcessing.value
+
+            session.commit()
+
+        except Exception as err:
+            session.rollback()
+            raise NoTaskModel(err)
+        finally:
+            session.close()
+
+        retval = self._run(**kwargs)
+
+        session = create_session(db_engine)
+        try:
+            self.logger.debug(
+                '{!r}: Writing results to DB (db_url={}) ...'.format(
+                    self, self._db_url))
+
+            m_task = session.query(orm.Task).\
+                filter(orm.Task.id==self.id).\
+                one()
+
+            m_task.status = retval.status
+            m_task.status_code = retval.status_code
+            m_task.warning = retval.warning
+
+            if retval.status_code == 200:
+                m_task.result = retval.data[self.id]
+
+            session.commit()
+            self.logger.debug(
+                '{!r}: {!r} successfully written.'.format(self, m_task))
+
+            return retval
+
+        except Exception as err:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+
+    # __call__ ()
+
+    def __repr__(self):
+        return '<{}(id={})'.format(type(self).__name__, self.id)
 
 # class Task
 
-
-class AsyncTask(Task):
-    """
-    Abstract base class for an asynchronous task.
-    """
-
-    LOGGER = 'ramsis.worker.asnyc_task'
-
-    def __init__(self, logger=None):
-        self._result = None
-        self._process = None
-        self._returncode = None
-
-        super().__init__(logger=logger if logger is not None else self.LOGGER)
-
-    @property
-    def returncode(self):
-        return self._returncode
-
-    def reset(self):
-        if self.is_configured:
-            self._process = None
-            self._result = None
-            self._returncode = None
-            self._stdout = None
-            self._stderr = None
-            self.is_configured = False
-
-    def poll(self):
-        raise NotImplementedError
-
-# class AsyncTask
 
 # ---- END OF <task.py> ----

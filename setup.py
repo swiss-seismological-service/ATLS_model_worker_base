@@ -48,8 +48,11 @@ _authors_email = [
 _install_requires = [
     'Flask>=0.12.2',
     'Flask-RESTful>=0.3.6',
-    'webargs>=2.1',
-    "ramsis.utils==0.1", ]
+    'Flask-SQLAlchemy>=2.3.2',
+    'marshmallow>=3.0.0b12',
+    "ramsis.utils==0.1",
+    "SQLAlchemy>=1.2.10",
+    'webargs>=4.0.0', ]
 
 _extras_require = {'doc': [
     "epydoc==3.0.1",
@@ -67,7 +70,8 @@ _data_files = [
 
 _entry_points_sass = {
     'console_scripts': [
-        'ramsis-worker-sass = ramsis.worker.SaSS.app:main', ]}
+        'ramsis-worker-sass = ramsis.worker.SaSS.app:main',
+        'ramsis-worker-db-init = ramsis.worker.utils.db_init:main']}
 _entry_points = _entry_points_sass.copy()
 
 _name = 'ramsis.worker'
@@ -88,7 +92,8 @@ if subsys == 'SaSS':
     # TODO(damb): adjust includes/excludes
     _packages = ['ramsis.worker',
                  'ramsis.worker.utils',
-                 'ramsis.worker.SaSS', ]
+                 'ramsis.worker.SaSS',
+                 'ramsis.worker.SaSS.v1', ]
     _entry_points = _entry_points_sass
 
 

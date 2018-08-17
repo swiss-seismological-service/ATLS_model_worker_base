@@ -12,6 +12,7 @@
 General purpose ramsis.workers utilities
 """
 
+import argparse
 import pkg_resources
 
 # -----------------------------------------------------------------------------
@@ -39,6 +40,19 @@ def escape_newline(s):
 
     :param str s: String to be processed.
     """
-    return s.replace('\n','\\n').replace('\r','\\r')
+    return s.replace('\n', '\\n').replace('\r', '\\r')
+
+# escape_newline ()
+
+def url(url):
+    """
+    check if SQLite URL is absolute.
+    """
+    if (url.startswith('sqlite:') and not
+            (url.startswith('////', 7) or url.startswith('///C:', 7))):
+        raise argparse.ArgumentTypeError('SQLite URL must be absolute.')
+    return url
+
+# url ()
 
 # ---- END OF <__init__.py> ----

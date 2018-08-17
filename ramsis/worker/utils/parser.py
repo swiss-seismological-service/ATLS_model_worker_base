@@ -21,7 +21,7 @@ from ramsis.utils.protocol import StatusCode
 
 # This error handler is necessary for usage with Flask-RESTful
 @_parser.error_handler
-def handle_request_parsing_error(err):
+def handle_request_parsing_error(err, req, schema):
     """
     Webargs error handler that uses Flask-RESTful's abort function
     to return a JSON error response to the client.
