@@ -31,4 +31,13 @@ RAMSIS_WORKER_SASS_CONFIG_SECTION = 'CONFIG_WORKER_SASS'
 PATH_RAMSIS_SASS_SCENARIOS = ('/' + RAMSIS_WORKER_SASS_ID +
                               PATH_RAMSIS_WORKER_SCENARIOS)
 
+# TODO(damb): Configure meaningful defaults
+RAMSIS_WORKER_SASS_MODEL_DEFAULTS = {
+    "reservoir_geometry":
+        "POLYHEDRALSURFACE(((0 0 0, 0 0 1, 0 1 1, 0 1 0, 0 0 0)))",
+    "model_parameters": {
+        "training_duration": 6.0,
+        "fc_threshold_magnitude": 2.6,
+        "fc_cumulative_injected_volume": 0}}
+
 # ---- END OF <settings.py> ----

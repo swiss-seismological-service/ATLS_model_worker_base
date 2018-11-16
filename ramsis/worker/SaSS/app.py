@@ -13,6 +13,8 @@ RAMSIS SaSS (Shapiro and Smothed Seismicity) worker.
 """
 
 import argparse
+import copy
+import json
 import sys
 import traceback
 
@@ -23,11 +25,42 @@ from ramsis.worker.utils import escape_newline, url
 from ramsis.worker.SaSS import __version__, create_app
 
 
+def model_defaults(config_dict):
+    """
+    Parse a default model configuration.
+
+    :param str config_dict: Configuration dictionary
+    :retval: dict
+    """
+    try:
+        config_dict = json.loads(config_dict)
+    except Exception:
+        raise argparse.ArgumentTypeError(
+            'Invalid model default configuration dictionary syntax.')
+    retval = copy.deepcopy(settings.RAMSIS_WORKER_SASS_MODEL_DEFAULTS)
+    try:
+        for k, v in config_dict.items():
+            if k not in settings.RAMSIS_WORKER_SASS_MODEL_DEFAULTS:
+                raise ValueError(
+                    'Invalid model default configuration key {!r}.'.format(k))
+            retval[k] = v
+
+        # TODO(damb): Validate model_defaults from model_parameters dict
+
+    except ValueError as err:
+        raise argparse.ArgumentTypeError(err)
+
+    return retval
+
+# model_defaults ()
+
+
 # ----------------------------------------------------------------------------
 class SaSSWorkerWebservice(App):
     """
     A webservice implementing the SaSS (Shapiro and Smothed Seismicity) model.
     """
+    VERSION = __version__
 
     def build_parser(self, parents=[]):
         """
@@ -42,11 +75,14 @@ class SaSSWorkerWebservice(App):
             description='Launch SaSS worker webservice.',
             parents=parents)
         # optional arguments
-        parser.add_argument('--version', '-V', action='version',
-                            version='%(prog)s version ' + __version__)
         parser.add_argument('-p', '--port', metavar='PORT', type=int,
                             default=5000,
                             help='server port')
+        parser.add_argument('--model-defaults', metavar='DICT',
+                            type=model_defaults, dest='model_defaults',
+                            default=settings.RAMSIS_WORKER_SASS_MODEL_DEFAULTS,
+                            help=("Default model configuration parameter dict "
+                                  "(JSON syntax). (default: %(default)s)"))
 
         # positional arguments
         parser.add_argument('db_url', type=url, metavar='URL',
@@ -95,7 +131,8 @@ class SaSSWorkerWebservice(App):
         app_config = {
             'PORT': self.args.port,
             'SQLALCHEMY_DATABASE_URI': self.args.db_url,
-            'SQLALCHEMY_TRACK_MODIFICATIONS': False
+            'SQLALCHEMY_TRACK_MODIFICATIONS': False,
+            'RAMSIS_MODEL_DEFAULTS': self.args.model_defaults
         }
         app = create_app(config_dict=app_config)
 

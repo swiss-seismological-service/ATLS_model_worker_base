@@ -43,6 +43,9 @@ class DBInitApp(App):
         # optional arguments
         parser.add_argument('--version', '-V', action='version',
                             version='%(prog)s version ' + __version__)
+        parser.add_argument('--force', '-f', action='store_true',
+                            default=False,
+                            help='Ignore existent DB schemas.')
 
         # positional arguments
         parser.add_argument('db_url', type=url, metavar='URL',
@@ -61,6 +64,11 @@ class DBInitApp(App):
         exit_code = ExitCode.EXIT_SUCCESS
         try:
             engine = create_engine(self.args.db_url)
+
+            if self.args.force:
+                self.logger.debug(
+                    'Force mode enabled. Drop existing DB model.')
+                orm.ORMBase.metadata.drop_all(engine)
 
             # create db tables
             self.logger.debug('Creating database tables ...')

@@ -12,9 +12,6 @@
 SaSS resource facilities.
 """
 
-import os
-import functools
-
 from flask_restful import Api
 
 from ramsis.worker import settings
@@ -56,14 +53,6 @@ api_v1.add_resource(SaSSAPI,
                     '{}/<task_id>'.format(settings.PATH_RAMSIS_SASS_SCENARIOS),
                     resource_class_kwargs={
                         'db': db})
-
-# XXX(damb): Bind parameters to the SaSSModel's constructor.
-Model.__init__ = functools.partialmethod(
-    Model.__init__,
-    matlab_opts='-sd {}'.format(
-        os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                     os.pardir,
-                     'model')))
 
 api_v1.add_resource(SaSSListAPI,
                     settings.PATH_RAMSIS_SASS_SCENARIOS,

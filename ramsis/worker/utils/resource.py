@@ -12,14 +12,16 @@
 Resource facilities for worker webservices.
 """
 
+import functools
 import logging
+import uuid
 
 from multiprocessing import Pool
 
 from flask import request, current_app, g
 from flask import make_response as _make_response
 from flask_restful import Resource
-
+from sqlalchemy.orm.exc import NoResultFound
 
 from ramsis.utils.error import Error
 from ramsis.utils.protocol import (StatusCode, WorkerInputMessageSchema,
@@ -64,6 +66,7 @@ def make_response(msg, status_code=None, serializer=WorkerOutputMessageSchema,
                 if not isinstance(msg, list):
                     raise
 
+        print(serializer(**kwargs).dumps(msg))
         resp = _make_response(serializer(**kwargs).dumps(msg), status_code)
         resp.headers['Content-Type'] = MIMETYPE
         #if msg.warning:
@@ -71,9 +74,33 @@ def make_response(msg, status_code=None, serializer=WorkerOutputMessageSchema,
         return resp
 
     except Exception as err:
-        raise WorkerError(str(err))
+        raise WorkerError(err)
 
 # make_response ()
+
+
+def with_validated_args(func):
+    """
+    Method decorator providing a generic argument validation.
+    """
+    @functools.wraps(func)
+    def decorator(self, *args, **kwargs):
+        try:
+            _ = self.validate_args(kwargs.get('task_id'))  # noqa
+        except ValueError as err:
+            self.logger.warning('Invalid argument: {}.'.format(err))
+
+            msg = WorkerOutputMessage.no_content(kwargs.get('task_id'))
+            self.logger.debug('Response msg: {}'.format(msg))
+
+            return make_response(msg)
+
+        return func(self, *args, **kwargs)
+
+    return decorator
+
+# with_validated_args ()
+
 
 # -----------------------------------------------------------------------------
 class RamsisWorkerBaseResource(Resource):
@@ -106,6 +133,7 @@ class RamsisWorkerResource(RamsisWorkerBaseResource):
     *RT-RAMSIS* worker resource implementation.
     """
 
+    @with_validated_args
     def get(self, task_id):
         """
         Implementation of HTTP :code:`GET` method. Returns a specific task.
@@ -122,16 +150,17 @@ class RamsisWorkerResource(RamsisWorkerBaseResource):
             msg = WorkerOutputMessage.from_task(task)
             self.logger.debug('Response msg: {}'.format(msg))
 
-            return make_response(msg)
-
         except Exception as err:
             session.rollback()
             raise err
         finally:
             session.close()
 
+        return make_response(msg)
+
     # get ()
 
+    @with_validated_args
     def delete(self, task_id):
         """
         Implementation of HTTP :code:`DELETE` method. Removes a specific task.
@@ -139,6 +168,7 @@ class RamsisWorkerResource(RamsisWorkerBaseResource):
         self.logger.debug(
             'Received HTTP DELETE request (task_id: {}).'.format(task_id))
 
+        # TODO(damb): To be checked if the task is currently processing.
         session = self._db.session
         try:
             task = session.query(orm.Task).\
@@ -153,6 +183,14 @@ class RamsisWorkerResource(RamsisWorkerBaseResource):
 
             return make_response(msg, status_code=200)
 
+        except NoResultFound as err:
+            self.logger.warning(
+                'No matching task found (id={}).'.format(task_id))
+
+            msg = WorkerOutputMessage.no_content(task_id)
+            self.logger.debug('Response msg: {}'.format(msg))
+            return make_response(msg)
+
         except Exception as err:
             session.rollback()
             raise err
@@ -160,6 +198,23 @@ class RamsisWorkerResource(RamsisWorkerBaseResource):
             session.close()
 
     # delete ()
+
+    @staticmethod
+    def validate_args(task_id):
+        """
+        Validate resource arguments.
+
+        :param str task_id: Task identifier (must be :py:class:`uuid.UUID`
+            compatible)
+
+        :return: Task identifier
+        :rtype: :py:class:`uuid.UUID`
+
+        :raises ValueError: If an invalid value is passed
+        """
+        return uuid.UUID(task_id)
+
+    # validate_args ()
 
 # class RamsisWorkerResource
 
@@ -262,10 +317,12 @@ class RamsisWorkerListResource(RamsisWorkerBaseResource):
             'Executing {!r} task ({}) with parameters {!r} ...'.format(
                 self._model, task_id, args))
 
-        t = Task(model=self._model(), task_id=task_id,
-                 db_url=current_app.config['SQLALCHEMY_DATABASE_URI'], **args)
+        # create a task; inject model_default parameters
+        t = Task(
+            model=self._model(**current_app.config['RAMSIS_MODEL_DEFAULTS']),
+            task_id=task_id,
+            db_url=current_app.config['SQLALCHEMY_DATABASE_URI'], **args)
 
-        # TODO TODO TODO(damb): Register a task @ DB.
         _ = self._pool().apply_async(t) # noqa
 
         msg = WorkerOutputMessage.accepted(task_id)

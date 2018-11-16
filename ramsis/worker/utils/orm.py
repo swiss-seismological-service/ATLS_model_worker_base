@@ -14,7 +14,9 @@ import datetime
 import uuid
 
 from geoalchemy2 import Geometry
-from sqlalchemy import Column, Integer, Float, String, DateTime, ForeignKey
+from osgeo import ogr
+from sqlalchemy import (Column, Integer, Float, String, DateTime, ForeignKey,
+                        inspect)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declared_attr, declarative_base
 from sqlalchemy.orm import relationship
@@ -153,9 +155,16 @@ class Reservoir(LastSeenMixin, ORMBase):
 
     sub_geometries = relationship('ramsis.worker.utils.orm.Reservoir')
 
+    def wkt(self):
+        try:
+            return ogr.CreateGeometryFromWkb(
+                self.geom._data_from_desc(self.geom.desc)).ExportToWkt()
+        except AttributeError:
+            return self.geom
+
     def __repr__(self):
         return "<{}(geom={}, sub_geoms={})>".format(type(self).__name__,
-                                                    self.geom,
+                                                    self.wkt(),
                                                     self.sub_geometries)
 
 # class Reservoir

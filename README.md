@@ -1,37 +1,43 @@
-# RAMSIS Worker 
+# RT-RAMSIS Worker
 
-A RAMSIS Worker controls a forecast model on behalf of RAMSIS Core. It
-receives requests over a RESTful API, starts or stops its model
-and returns results and state information whenever requested from the core.
+`RT-RAMSIS` workers wrap forecast models providing a RESTful API. Workers
+handle requests, control the forecast computation and both return and delete
+results when requested. Workers are implemented as stateless webservices using
+the [Flask](http://flask.pocoo.org/) framework.
 
-A Worker consists of three parts:
+A worker basically consists of the following parts:
 
-1. A *resource* which provides the web service API.
-2. A *task* which contains the model specific control mechanism
-3. A *schema* to deserialize model specific parameters included in the input
-message
-
+* A *resource* which provides the web service API
+* A *model* implementing the scientific forecast model
+* A *task* executing the forecast model
+* A *schema* to deserialize model specific parameters included in the input
+  message
 
 # Implementation
 
-Since the worker API makes use of [Flask-RESTful]
-(https://flask-restful.readthedocs.io/en/latest/) workers are resource
-implementations. `ramsis.worker.utils.AbstractWorkerResource` extends the
-resource API e.g. by means of handling an instance of a concrete
-`ramsis.worker.utils.Task` object.
+In order to fully implement a `RT-RAMSIS` worker API the `ramsis.worker`
+package provides two general purpose implementations of
+[Flask-RESTful](https://flask-restful.readthedocs.io/en/latest/) resources:
+
+1. `ramsis.worker.utils.resource.RamsisWorkerResource`
+2. `ramsis.worker.utils.resource.RamsisWorkerListResource`
 
 Hence, to implement a concrete worker follow this recipe:
 
-1. Provide a concrete implementation of `ramsis.worker.utils.Task`.
+1. Provide a concrete implementation of `ramsis.worker.utils.model.Model`. A
+   model must return a valid `ramsis.worker.utils.model.ModelResult`.
 2. Provide a concrete implementation of
-`ramsis.worker.utils.AbstractWorkerResource`.
+   `ramsis.worker.utils.resource.RamsisWorkerListResource`. Optionally also for
+   `ramsis.worker.utils.resource.RamsisWorkerResource`.
 3. Worker-side you should use a specified implementation of
-`ramsis.utils.protocol.WorkerInputMessage`. Define a custom model specific
-schema for `model_parameters` to allow parameter validation.
+   `ramsis.utils.protocol.WorkerInputMessage`. Define a custom model specific
+   schema for the `model_parameters` field in order to enable parameter
+   validation.
 
 The worker communication protocol is standardized. That is why model
-configuration parameters are passed to the worker as a dictionary.
+configuration parameters by default are passed to the worker as a dictionary.
 
 The SaSS (Shapiro and Smoothed Seismicity) model worker is an exemplary
-concrete implemention of an asynchronous worker. It is located at the
-`ramsis.worker.SaSS` package.
+concrete implemention of an asynchronous worker implementing the Flask
+[Blueprint](https://flask.pocoo.org/docs/blueprints/) approach. The source code
+is located at the `ramsis.worker.SaSS` package.

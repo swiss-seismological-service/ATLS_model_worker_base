@@ -101,7 +101,7 @@ class Task(object):
     :param task_id: Task identifier
     :type task_id: :py:class:`ùuid.UUID`
     :param kwargs: Keyword value parameters used when running the
-        :py:class:`ramsis.worker.utils.Model`.
+        :py:class:`ramsis.worker.utils.model.Model`.
     """
 
     LOGGER = 'ramsis.worker.task'

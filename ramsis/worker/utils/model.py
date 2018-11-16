@@ -39,8 +39,8 @@ def with_exception_handling(func):
         try:
             return func(self, *args, **kwargs)
         except Exception as err:
-            msg = 'ModelError ({}): {}: {}.'.format(type(self).__name__,
-                                                    type(err).__name__, err)
+            msg = 'ModelError ({}-{}): {}'.format(type(self).__name__,
+                                                   type(err).__name__, err)
 
             self.logger.critical(escape_newline(msg))
             # XXX(damb): The decorator must return its result in a specific
