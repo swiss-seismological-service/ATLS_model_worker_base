@@ -20,20 +20,20 @@ from ramsis.worker.SaSS.model import Model
 from ramsis.worker.SaSS.v1 import blueprint
 from ramsis.worker.SaSS.v1.schema import SFMWorkerInputMessageSchema
 from ramsis.worker.utils.parser import parser
-from ramsis.worker.utils.resource import (RamsisWorkerResource,
-                                          RamsisWorkerListResource)
+from ramsis.worker.utils.resource import (SFMRamsisWorkerResource,
+                                          SFMRamsisWorkerListResource)
 
 
 api_v1 = Api(blueprint)
 
 
-class SaSSAPI(RamsisWorkerResource):
+class SaSSAPI(SFMRamsisWorkerResource):
 
     LOGGER = 'ramsis.worker.sass_resource'
 
 # class SaSSAPI
 
-class SaSSListAPI(RamsisWorkerListResource):
+class SaSSListAPI(SFMRamsisWorkerListResource):
     """
     Concrete implementation of an asynchronous SaSS worker resource.
 

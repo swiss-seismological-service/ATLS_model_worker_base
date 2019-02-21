@@ -128,7 +128,7 @@ class RamsisWorkerBaseResource(Resource):
 
 # class RamsisWorkerBaseResource
 
-class RamsisWorkerResource(RamsisWorkerBaseResource):
+class SFMRamsisWorkerResource(RamsisWorkerBaseResource):
     """
     *RT-RAMSIS* worker resource implementation.
     """
@@ -216,10 +216,10 @@ class RamsisWorkerResource(RamsisWorkerBaseResource):
 
     # validate_args ()
 
-# class RamsisWorkerResource
+# class SFMRamsisWorkerResource
 
 
-class RamsisWorkerListResource(RamsisWorkerBaseResource):
+class SFMRamsisWorkerListResource(RamsisWorkerBaseResource):
     """
     Implementation of a *stateless* *RT-RAMSIS* worker resource. The resource
     ships a pool of worker processes.
@@ -351,7 +351,7 @@ class RamsisWorkerListResource(RamsisWorkerBaseResource):
 
     # _parse ()
 
-# class RamsisWorkerListResource
+# class SFMRamsisWorkerListResource
 
 
 # ---- END OF <resource.py> ----
