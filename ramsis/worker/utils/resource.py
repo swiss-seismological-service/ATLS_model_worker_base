@@ -130,7 +130,7 @@ class RamsisWorkerBaseResource(Resource):
 
 class SFMRamsisWorkerResource(RamsisWorkerBaseResource):
     """
-    *RT-RAMSIS* worker resource implementation.
+    *RT-RAMSIS* seismicity forecast model (SFM) worker resource implementation.
     """
 
     @with_validated_args
@@ -221,8 +221,8 @@ class SFMRamsisWorkerResource(RamsisWorkerBaseResource):
 
 class SFMRamsisWorkerListResource(RamsisWorkerBaseResource):
     """
-    Implementation of a *stateless* *RT-RAMSIS* worker resource. The resource
-    ships a pool of worker processes.
+    Implementation of a *stateless* *RT-RAMSIS* seismicity forecast model (SFM)
+    worker resource. The resource ships a pool of worker processes.
 
     By default model results are written to a DB.
     """
