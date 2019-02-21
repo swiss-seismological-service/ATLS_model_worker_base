@@ -66,7 +66,6 @@ def make_response(msg, status_code=None,
                 if not isinstance(msg, list):
                     raise
 
-        print(serializer(**kwargs).dumps(msg))
         resp = _make_response(serializer(**kwargs).dumps(msg), status_code)
         resp.headers['Content-Type'] = MIMETYPE
         #if msg.warning:
