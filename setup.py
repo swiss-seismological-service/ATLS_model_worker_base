@@ -50,7 +50,7 @@ _install_requires = [
     'Flask-RESTful>=0.3.6',
     'Flask-SQLAlchemy>=2.3.2',
     'marshmallow>=3.0.0b12',
-    'numpy<1.15'2,
+    'numpy<1.15',
     "ramsis.utils==0.1",
     "SQLAlchemy>=1.2.10",
     'webargs>=4.0.0', ]
