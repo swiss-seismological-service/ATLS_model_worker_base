@@ -318,7 +318,7 @@ class SFMRamsisWorkerListResource(RamsisWorkerBaseResource):
 
         # create a task; inject model_default parameters
         t = Task(
-            model=self._model(**current_app.config['RAMSIS_MODEL_DEFAULTS']),
+            model=self._model(**current_app.config['RAMSIS_SFM_DEFAULTS']),
             task_id=task_id,
             db_url=current_app.config['SQLALCHEMY_DATABASE_URI'], **args)
 

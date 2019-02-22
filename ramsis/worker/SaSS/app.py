@@ -132,7 +132,7 @@ class SaSSWorkerWebservice(App):
             'PORT': self.args.port,
             'SQLALCHEMY_DATABASE_URI': self.args.db_url,
             'SQLALCHEMY_TRACK_MODIFICATIONS': False,
-            'RAMSIS_MODEL_DEFAULTS': self.args.model_defaults
+            'RAMSIS_SFM_DEFAULTS': self.args.model_defaults
         }
         app = create_app(config_dict=app_config)
 
