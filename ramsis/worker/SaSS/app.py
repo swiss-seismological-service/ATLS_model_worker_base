@@ -37,25 +37,46 @@ def model_defaults(config_dict):
     except Exception:
         raise argparse.ArgumentTypeError(
             'Invalid model default configuration dictionary syntax.')
-    retval = copy.deepcopy(settings.RAMSIS_WORKER_SASS_MODEL_DEFAULTS)
+
+    def merge_dicts(dict1, dict2):
+        """
+        Merge values recursively from :code:`dict2` into :code:`dict1`.
+        """
+        for k in dict1.keys():
+            if type(dict1[k]) is dict:
+                merge_dicts(dict1[k], dict2[k])
+            else:
+                try:
+                    dict1[k] = dict2[k]
+                except KeyError:
+                    pass
+
+    # merge_dicts ()
+
+    def validate_keys(dict1, dict2):
+        """
+        Validate recursively if keys of :code:`dict1` are in :code:`dict2`.
+        """
+        for k in dict1.keys():
+            if k not in dict2:
+                raise ValueError('Invalid key found: {!r}'.format(k))
+            if type(dict1[k]) is dict:
+                validate_keys(dict1[k], dict2[k])
+
+    # validate_keys ()
+
+    retval = copy.deepcopy(settings.RAMSIS_WORKER_SFM_DEFAULTS)
     try:
-        for k, v in config_dict.items():
-            if k not in settings.RAMSIS_WORKER_SASS_MODEL_DEFAULTS:
-                raise ValueError(
-                    'Invalid model default configuration key {!r}.'.format(k))
-            retval[k] = v
-
-        # TODO(damb): Validate model_defaults from model_parameters dict
-
+        validate_keys(config_dict, settings.RAMSIS_WORKER_SFM_DEFAULTS)
     except ValueError as err:
         raise argparse.ArgumentTypeError(err)
 
+    merge_dicts(retval, config_dict)
     return retval
 
 # model_defaults ()
 
 
-# ----------------------------------------------------------------------------
 class SaSSWorkerWebservice(App):
     """
     A webservice implementing the SaSS (Shapiro and Smothed Seismicity) model.
@@ -103,6 +124,9 @@ class SaSSWorkerWebservice(App):
             app = self.setup_app()
             self.logger.debug('Routes configured: {}'.format(
                 escape_newline(str(app.url_map))))
+            self.logger.debug(
+                'Model defaults configured: {!r}'.format(
+                    self.args.model_defaults))
             self.logger.info('Serving with local WSGI server.')
             app.run(threaded=True, debug=True, port=self.args.port)
 
