@@ -14,8 +14,7 @@ SaSS resource facilities.
 
 from flask_restful import Api
 
-from ramsis.worker import settings
-from ramsis.worker.SaSS import db
+from ramsis.worker.SaSS import db, settings
 from ramsis.worker.SaSS.model import Model
 from ramsis.worker.SaSS.v1 import blueprint
 from ramsis.worker.SaSS.v1.schema import SFMWorkerInputMessageSchema

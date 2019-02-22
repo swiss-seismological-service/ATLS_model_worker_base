@@ -20,9 +20,9 @@ import traceback
 
 from ramsis.utils.app import CustomParser, App, AppError
 from ramsis.utils.error import Error, ExitCode
-from ramsis.worker import settings
+from ramsis.worker import settings as global_settings
 from ramsis.worker.utils import escape_newline, url
-from ramsis.worker.SaSS import __version__, create_app
+from ramsis.worker.SaSS import __version__, create_app, settings
 
 
 def model_defaults(config_dict):
@@ -76,11 +76,11 @@ class SaSSWorkerWebservice(App):
             parents=parents)
         # optional arguments
         parser.add_argument('-p', '--port', metavar='PORT', type=int,
-                            default=5000,
+                            default=settings.RAMSIS_WORKER_SASS_PORT,
                             help='server port')
         parser.add_argument('--model-defaults', metavar='DICT',
                             type=model_defaults, dest='model_defaults',
-                            default=settings.RAMSIS_WORKER_SASS_MODEL_DEFAULTS,
+                            default=settings.RAMSIS_WORKER_SFM_DEFAULTS,
                             help=("Default model configuration parameter dict "
                                   "(JSON syntax). (default: %(default)s)"))
 
@@ -152,7 +152,7 @@ def main():
 
     try:
         app.configure(
-            settings.PATH_RAMSIS_WORKER_CONFIG,
+            global_settings.PATH_RAMSIS_WORKER_CONFIG,
             positional_required_args=['db_url'],
             config_section=settings.RAMSIS_WORKER_SASS_CONFIG_SECTION)
     except AppError as err:
