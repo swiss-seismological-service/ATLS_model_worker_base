@@ -31,6 +31,11 @@ def model_defaults(config_dict):
 
     :param str config_dict: Configuration dictionary
     :retval: dict
+
+    .. note::
+
+        Here, model default configuration parameters are not validated.
+        Validation must be performed at model level.
     """
     try:
         config_dict = json.loads(config_dict)
