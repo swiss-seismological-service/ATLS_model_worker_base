@@ -166,6 +166,7 @@ class SaSSWorkerWebservice(App):
 
 # class SaSSWorkerWebservice
 
+
 # ----------------------------------------------------------------------------
 def main():
     """
