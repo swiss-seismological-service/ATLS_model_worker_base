@@ -48,13 +48,13 @@ def model_defaults(config_dict):
         Merge values recursively from :code:`dict2` into :code:`dict1`.
         """
         for k in dict1.keys():
-            if type(dict1[k]) is dict:
-                merge_dicts(dict1[k], dict2[k])
-            else:
-                try:
+            try:
+                if type(dict1[k]) is dict:
+                    merge_dicts(dict1[k], dict2[k])
+                else:
                     dict1[k] = dict2[k]
-                except KeyError:
-                    pass
+            except KeyError:
+                pass
 
     # merge_dicts ()
 
