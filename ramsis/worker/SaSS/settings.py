@@ -19,7 +19,18 @@ PATH_RAMSIS_SASS_SCENARIOS = ('/' + RAMSIS_WORKER_SASS_ID +
 
 # TODO(damb): Configure meaningful defaults
 RAMSIS_WORKER_SFM_DEFAULTS = {
+    # XXX(damb): Reservoir description (format=WKT, srid=4326)
+    "reservoir": {"geom": ('POLYHEDRALSURFACE Z ('
+                           '((0 0 0, 0 1 0, 1 1 0, 1 0 0, 0 0 0)),'
+                           '((0 0 0, 0 1 0, 0 1 1, 0 0 1, 0 0 0)),'
+                           '((0 0 0, 1 0 0, 1 0 1, 0 0 1, 0 0 0)),'
+                           '((1 1 1, 1 0 1, 0 0 1, 0 1 1, 1 1 1)),'
+                           '((1 1 1, 1 0 1, 1 0 0, 1 1 0, 1 1 1)),'
+                           '((1 1 1, 1 1 0, 0 1 0, 0 1 1, 1 1 1)))')},
     "model_parameters": {
+        # XXX(damb): Local spatial reference system (SRS) spatial data is
+        # transformed into (format=Proj4)
+        "local_srs": '',
         "const_dim_voxel": DEFAULT_DIM_VOXEL,
         "training_duration": 6.0,
         "training_num_kernels": DEFAULT_NUM_KERNELS,
