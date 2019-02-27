@@ -76,6 +76,12 @@ class Model(_Model):
         self.logger.debug(format_msg(
             'Received seismic catalog with {} event(s).'.format(len(cat))))
 
+        self.logger.debug(format_msg('Importing scenario ...'))
+        injection_plan = kwargs['scenario']
+        self.logger.debug(format_msg(
+            'Received injection plan with {} event(s).'.format(
+                len(injection_plan['samples']))))
+
         self.logger.debug(format_msg(
             'Importing model specific configuration ...'))
         # XXX(damb): Use a single few of model parameters sent by the client
