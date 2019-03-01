@@ -84,7 +84,7 @@ class Model(_Model):
 
         self.logger.debug(format_msg(
             'Importing model specific configuration ...'))
-        # XXX(damb): Use a single few of model parameters sent by the client
+        # XXX(damb): Use a single view of model parameters sent by the client
         # and default model parameters injected while starting the service
         model_config = ChainMap(kwargs.get('model_parameters', {}),
                                 self._default_model_parameters)
