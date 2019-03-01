@@ -20,9 +20,9 @@ import traceback
 
 from ramsis.utils.app import CustomParser, App, AppError
 from ramsis.utils.error import Error, ExitCode
-from ramsis.worker import settings
+from ramsis.worker import settings as global_settings
 from ramsis.worker.utils import escape_newline, url
-from ramsis.worker.SaSS import __version__, create_app
+from ramsis.worker.SaSS import __version__, create_app, settings
 
 
 def model_defaults(config_dict):
@@ -31,31 +31,57 @@ def model_defaults(config_dict):
 
     :param str config_dict: Configuration dictionary
     :retval: dict
+
+    .. note::
+
+        Here, model default configuration parameters are not validated.
+        Validation must be performed at model level.
     """
     try:
         config_dict = json.loads(config_dict)
     except Exception:
         raise argparse.ArgumentTypeError(
             'Invalid model default configuration dictionary syntax.')
-    retval = copy.deepcopy(settings.RAMSIS_WORKER_SASS_MODEL_DEFAULTS)
+
+    def merge_dicts(dict1, dict2):
+        """
+        Merge values recursively from :code:`dict2` into :code:`dict1`.
+        """
+        for k in dict1.keys():
+            try:
+                if type(dict1[k]) is dict:
+                    merge_dicts(dict1[k], dict2[k])
+                else:
+                    dict1[k] = dict2[k]
+            except KeyError:
+                pass
+
+    # merge_dicts ()
+
+    def validate_keys(dict1, dict2):
+        """
+        Validate recursively if keys of :code:`dict1` are in :code:`dict2`.
+        """
+        for k in dict1.keys():
+            if k not in dict2:
+                raise ValueError('Invalid key found: {!r}'.format(k))
+            if type(dict1[k]) is dict:
+                validate_keys(dict1[k], dict2[k])
+
+    # validate_keys ()
+
+    retval = copy.deepcopy(settings.RAMSIS_WORKER_SFM_DEFAULTS)
     try:
-        for k, v in config_dict.items():
-            if k not in settings.RAMSIS_WORKER_SASS_MODEL_DEFAULTS:
-                raise ValueError(
-                    'Invalid model default configuration key {!r}.'.format(k))
-            retval[k] = v
-
-        # TODO(damb): Validate model_defaults from model_parameters dict
-
+        validate_keys(config_dict, settings.RAMSIS_WORKER_SFM_DEFAULTS)
     except ValueError as err:
         raise argparse.ArgumentTypeError(err)
 
+    merge_dicts(retval, config_dict)
     return retval
 
 # model_defaults ()
 
 
-# ----------------------------------------------------------------------------
 class SaSSWorkerWebservice(App):
     """
     A webservice implementing the SaSS (Shapiro and Smothed Seismicity) model.
@@ -76,11 +102,11 @@ class SaSSWorkerWebservice(App):
             parents=parents)
         # optional arguments
         parser.add_argument('-p', '--port', metavar='PORT', type=int,
-                            default=5000,
+                            default=settings.RAMSIS_WORKER_SASS_PORT,
                             help='server port')
         parser.add_argument('--model-defaults', metavar='DICT',
                             type=model_defaults, dest='model_defaults',
-                            default=settings.RAMSIS_WORKER_SASS_MODEL_DEFAULTS,
+                            default=settings.RAMSIS_WORKER_SFM_DEFAULTS,
                             help=("Default model configuration parameter dict "
                                   "(JSON syntax). (default: %(default)s)"))
 
@@ -103,6 +129,9 @@ class SaSSWorkerWebservice(App):
             app = self.setup_app()
             self.logger.debug('Routes configured: {}'.format(
                 escape_newline(str(app.url_map))))
+            self.logger.debug(
+                'Model defaults configured: {!r}'.format(
+                    self.args.model_defaults))
             self.logger.info('Serving with local WSGI server.')
             app.run(threaded=True, debug=True, port=self.args.port)
 
@@ -132,7 +161,7 @@ class SaSSWorkerWebservice(App):
             'PORT': self.args.port,
             'SQLALCHEMY_DATABASE_URI': self.args.db_url,
             'SQLALCHEMY_TRACK_MODIFICATIONS': False,
-            'RAMSIS_MODEL_DEFAULTS': self.args.model_defaults
+            'RAMSIS_SFM_DEFAULTS': self.args.model_defaults
         }
         app = create_app(config_dict=app_config)
 
@@ -141,6 +170,7 @@ class SaSSWorkerWebservice(App):
     # setup_app ()
 
 # class SaSSWorkerWebservice
+
 
 # ----------------------------------------------------------------------------
 def main():
@@ -152,7 +182,7 @@ def main():
 
     try:
         app.configure(
-            settings.PATH_RAMSIS_WORKER_CONFIG,
+            global_settings.PATH_RAMSIS_WORKER_CONFIG,
             positional_required_args=['db_url'],
             config_section=settings.RAMSIS_WORKER_SASS_CONFIG_SECTION)
     except AppError as err:

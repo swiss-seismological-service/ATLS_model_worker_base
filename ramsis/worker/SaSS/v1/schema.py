@@ -12,8 +12,8 @@
 from marshmallow import fields, Schema
 
 from ramsis.worker.SaSS import core
-from ramsis.utils.protocol import WorkerInputMessageSchema as \
-    _WorkerInputMessageSchema
+from ramsis.utils.protocol import SFMWorkerInputMessageSchema as \
+    _SFMWorkerInputMessageSchema
 
 
 class TupleField(fields.Field):
@@ -85,7 +85,7 @@ class ShapiroModelParameterSchema(Schema):
 # class ShapiroModelParameterSchema
 
 
-class WorkerInputMessageSchema(_WorkerInputMessageSchema):
+class SFMWorkerInputMessageSchema(_SFMWorkerInputMessageSchema):
     #model_parameters = fields.Nested(ShapiroModelParameterSchema,
     #                                 required=True)
     model_parameters = fields.Nested(ShapiroModelParameterSchema)

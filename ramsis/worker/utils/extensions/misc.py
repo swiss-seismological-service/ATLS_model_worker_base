@@ -14,13 +14,16 @@ Extensions for miscellaneous entities.
 
 import warnings
 
+from ramsis.utils.error import ErrorWithTraceback
+
+from osgeo import ogr, osr
 from pyproj import Proj, transform as _transform
 
-DEFAULT_PROJ = '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs'
+#DEFAULT_PROJ = '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs'
+DEFAULT_PROJ = ''
 
 
-def transform(x, y, z, p2_proj4,
-              p1_proj4='+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs'):
+def transform(x, y, z, p1_proj4, p2_proj4):
     """
     Transform coordinates from a coordinate system defined by :code:`p1_proj4`
     to the coordinate system defined by :code:`p2_proj4`.
@@ -51,6 +54,12 @@ def transform(x, y, z, p2_proj4,
 # -----------------------------------------------------------------------------
 class CoordinateMixin(object):
 
+    class CoordinateError(ErrorWithTraceback):
+        """Base coordinate error ({})."""
+
+    class MissingProjection(CoordinateError):
+        """Missing projection information."""
+
     def __init__(self, **kwargs):
         self._x = kwargs['x']
         self._y = kwargs['y']
@@ -61,6 +70,9 @@ class CoordinateMixin(object):
     # __init__ ()
 
     def transform(self, p2):
+        if not self._proj:
+            raise self.MissingProjection()
+
         if self._z is None:
             self._x, self._y = transform(
                 self._x, self._y, p1_proj4=self._proj, p2_proj4=p2)
@@ -70,6 +82,36 @@ class CoordinateMixin(object):
             self._x, self._y, self._z, p1_proj4=self._proj, p2_proj4=p2)
 
     # transform ()
+
+    @classmethod
+    def from_wkt(cls, wkt, proj=DEFAULT_PROJ):
+        """
+        Create a coordinate instance from a :code:`WKT` representation.
+
+        :param str wkt: :code:`WKT` describing the coordinate
+        :param str proj: `PROJ.4 <https://proj4.org/>`_ project string
+
+        :returns: Class instance of :py:class:`CoordinateMixin`
+
+        :raises ValueError: For invalid :code:`ẀKT` elements
+        """
+
+        try:
+            p = ogr.CreateGeometryFromWkt(wkt)
+
+            if p.GetGeometryName() != 'POINT Z':
+                raise ValueError(
+                    'Invalid geometry: {!r}.'.format(p.GetGeometryName()))
+            if proj:
+                spatial_ref = osr.SpatialReference()
+                proj = spatial_ref.ImportFromProj4(proj).ExportToProj4()
+
+            return cls(x=p.GetX(), y=p.GetY(), z=p.GetZ(), proj=proj)
+
+        except Exception as err:
+            raise ValueError(err)
+
+    # from_wkt ()
 
     def wkt(self):
         if self._proj:

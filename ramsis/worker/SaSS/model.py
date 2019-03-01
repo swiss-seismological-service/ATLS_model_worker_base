@@ -13,7 +13,10 @@
 <https://library.seg.org/doi/10.1190/1.3353727>`_) model facilities.
 """
 
+from collections import ChainMap
+
 from osgeo import ogr, osr
+from obspy.io.quakeml.core import Unpickler as QuakeMLDeserializer
 
 #from ramsis.worker.SaSS.core import sass
 from ramsis.worker.SaSS.core import DEFAULT_DIM_VOXEL
@@ -21,7 +24,7 @@ from ramsis.worker.SaSS.core.reservoir import Reservoir
 
 from ramsis.worker.utils import orm
 from ramsis.worker.utils.model import (Model as _Model, ModelError,
-                                       ModelResult, InvalidConfiguration)
+                                       ModelResult)
 
 
 class SaSSError(ModelError):
@@ -58,43 +61,40 @@ class Model(_Model):
 
     def _run(self, task_id, **kwargs):
         """
-        :param kwargs: Model task specific keyword value parameters. Parameters
-            are orderedly passed to the actual `MATLAB
-        <https://ch.mathworks.com/products/matlab.html>`_ SaSS model
-        implementation.
+        :param kwargs: Model specific keyword value parameters.
         """
-        self.logger.debug('{!r}: Running model ...'.format(self))
+        def format_msg(msg):
+            return '{!r}: {}'.format(self, msg)
 
+        self.logger.debug(format_msg('Running model ...'))
+        self.logger.debug(format_msg('Importing input parameters ...'))
 
+        self.logger.debug(format_msg('Importing seismic catalog ...'))
+        cat = QuakeMLDeserializer().loads(
+            kwargs['seismic_catalog']['quakeml'].encode('utf-8'))
+
+        self.logger.debug(format_msg(
+            'Received seismic catalog with {} event(s).'.format(len(cat))))
+
+        self.logger.debug(format_msg(
+            'Importing model specific configuration ...'))
+        # XXX(damb): Use a single few of model parameters sent by the client
+        # and default model parameters injected while starting the service
+        model_config = ChainMap(kwargs.get('model_parameters', {}),
+                                self._default_model_parameters)
+        # XXX(damb): Default parameters are configured when starting the
+        # worker.
+        self.logger.debug(format_msg(
+            'Received model configuration: {!r}'.format(model_config)))
+
+        self.logger.debug(format_msg('Importing reservoir geometry ...'))
+
+        # TODO(damb): Transform spatial data into local coordinate system
+        # TODO TODO TODO
+
+        reservoir_geom = kwargs['reservoir']['geom']
         try:
-            catalog = kwargs['catalog']
-            hydraulics = kwargs['hydraulics']
-        except KeyError as err:
-            raise SaSSError('Missing data ({}).'.format(err))
-
-        # XXX(damb): Fetch configuration parameters.
-        reservoir = kwargs.get('reservoir', self._default_reservoir)
-        model_parameters = kwargs.get('model_parameters',
-                                      self._default_model_parameters)
-
-        if 'const_dim_voxel' not in model_parameters:
-            model_parameters['const_dim_voxel'] = DEFAULT_DIM_VOXEL
-
-        if None in (reservoir, model_parameters):
-            raise InvalidConfiguration(
-                'reservoir={!r}, model_parameters={!r}'.format(
-                    reservoir, model_parameters))
-
-        self.logger.debug(
-            '{}: reservoir={!r}, model_parameters={}'.format(
-                self, reservoir, model_parameters))
-
-        self.logger.debug('Creating SaSS model reservoir ...')
-        try:
-            reservoir_geom = reservoir['geom']
             _reservoir_geom = self._validate_geometry(reservoir_geom)
-        except KeyError as err:
-            raise ValidationError(err)
         except ValueError as err:
             raise ValidationError(err)
 
@@ -102,30 +102,24 @@ class Model(_Model):
             proj = _reservoir_geom.GetSpatialReference().ExportToProj4()
             self.logger.warning(
                 'Reservoir projection is ignored (PROJ4): {!r}. Assuming '
-                'cartesian coordinates in meters. '.format(proj))
+                'WGS84 (srid=4326). '.format(proj))
         except AttributeError as err:
             self.logger.debug(
-                'No CRS information passed ({}). Assuming cartesian '
-                'coordinates in meters.'.format(err))
+                'No CRS information passed ({}). Assuming WGS84 '
+                '(srid=4326).'.format(err))
             proj = ''
 
+        # TODO TODO TODO
         # XXX(damb): We do not use CRS information for reservoir voxels.
-        reservoir = Reservoir.from_envelope(
-            *_reservoir_geom.GetEnvelope3D(),
-            dim_voxel=model_parameters['const_dim_voxel'])
+        #reservoir = Reservoir.from_envelope(
+        #    *_reservoir_geom.GetEnvelope3D(),
+        #    dim_voxel=model_config['const_dim_voxel'])
 
-        self.logger.debug('SaSS model reservoir created.')
+        result = 73
 
-        #XXX(damb): Create a SaSS model conform catalog
-
-        # TODO TODO TODO
-        # TODO TODO TODO
-        result=0
-
-        # SaSS should return a reservoir independent from the database (i.e.
-        # orm.Reservoir) in order to have a fully modularized model
-        # implementation
-
+        # XXX(damb): SaSS should return a reservoir independent from the
+        # database (i.e.  orm.Reservoir) in order to have a fully modularized
+        # model implementation independend of the worker ORM facilities.
         return ModelResult.ok(
             data={task_id: orm.Reservoir(geom=reservoir_geom,
                                          b_value=result)},

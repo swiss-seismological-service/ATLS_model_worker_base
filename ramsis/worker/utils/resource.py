@@ -24,9 +24,9 @@ from flask_restful import Resource
 from sqlalchemy.orm.exc import NoResultFound
 
 from ramsis.utils.error import Error
-from ramsis.utils.protocol import (StatusCode, WorkerInputMessageSchema,
-                                   WorkerOutputMessage,
-                                   WorkerOutputMessageSchema,
+from ramsis.utils.protocol import (StatusCode, SFMWorkerInputMessageSchema,
+                                   SFMWorkerOutputMessage,
+                                   SFMWorkerOutputMessageSchema,
                                    MIMETYPE)
 from ramsis.worker.utils import orm
 from ramsis.worker.utils.task import Task
@@ -41,13 +41,13 @@ class CannotCreateTaskModel(WorkerError):
     """Error while creating task model ({})."""
 
 # -----------------------------------------------------------------------------
-def make_response(msg, status_code=None, serializer=WorkerOutputMessageSchema,
-                  **kwargs):
+def make_response(msg, status_code=None,
+                  serializer=SFMWorkerOutputMessageSchema, **kwargs):
     """
     Factory function creating :py:class:`flask.Flask.response_class.
 
     :param msg: Serialized message the response is created from
-    :type msg: :py:class:`ramsis.utils.protocol.WorkerOutputMessage`
+    :type msg: :py:class:`ramsis.utils.protocol.SFMWorkerOutputMessage`
     :param status_code: Force HTTP status code. If :code:`None` the status code
         is extracted from :code:`msg`
     :type status_code: int or None
@@ -66,7 +66,6 @@ def make_response(msg, status_code=None, serializer=WorkerOutputMessageSchema,
                 if not isinstance(msg, list):
                     raise
 
-        print(serializer(**kwargs).dumps(msg))
         resp = _make_response(serializer(**kwargs).dumps(msg), status_code)
         resp.headers['Content-Type'] = MIMETYPE
         #if msg.warning:
@@ -90,7 +89,7 @@ def with_validated_args(func):
         except ValueError as err:
             self.logger.warning('Invalid argument: {}.'.format(err))
 
-            msg = WorkerOutputMessage.no_content(kwargs.get('task_id'))
+            msg = SFMWorkerOutputMessage.no_content(kwargs.get('task_id'))
             self.logger.debug('Response msg: {}'.format(msg))
 
             return make_response(msg)
@@ -128,9 +127,9 @@ class RamsisWorkerBaseResource(Resource):
 
 # class RamsisWorkerBaseResource
 
-class RamsisWorkerResource(RamsisWorkerBaseResource):
+class SFMRamsisWorkerResource(RamsisWorkerBaseResource):
     """
-    *RT-RAMSIS* worker resource implementation.
+    *RT-RAMSIS* seismicity forecast model (SFM) worker resource implementation.
     """
 
     @with_validated_args
@@ -147,7 +146,7 @@ class RamsisWorkerResource(RamsisWorkerBaseResource):
                 filter(orm.Task.id==task_id).\
                 one()
 
-            msg = WorkerOutputMessage.from_task(task)
+            msg = SFMWorkerOutputMessage.from_task(task)
             self.logger.debug('Response msg: {}'.format(msg))
 
         except Exception as err:
@@ -175,7 +174,7 @@ class RamsisWorkerResource(RamsisWorkerBaseResource):
                 filter(orm.Task.id==task_id).\
                 one()
 
-            msg = WorkerOutputMessage.from_task(task)
+            msg = SFMWorkerOutputMessage.from_task(task)
             self.logger.debug('Response msg: {}'.format(msg))
 
             session.delete(task)
@@ -187,7 +186,7 @@ class RamsisWorkerResource(RamsisWorkerBaseResource):
             self.logger.warning(
                 'No matching task found (id={}).'.format(task_id))
 
-            msg = WorkerOutputMessage.no_content(task_id)
+            msg = SFMWorkerOutputMessage.no_content(task_id)
             self.logger.debug('Response msg: {}'.format(msg))
             return make_response(msg)
 
@@ -216,13 +215,13 @@ class RamsisWorkerResource(RamsisWorkerBaseResource):
 
     # validate_args ()
 
-# class RamsisWorkerResource
+# class SFMRamsisWorkerResource
 
 
-class RamsisWorkerListResource(RamsisWorkerBaseResource):
+class SFMRamsisWorkerListResource(RamsisWorkerBaseResource):
     """
-    Implementation of a *stateless* *RT-RAMSIS* worker resource. The resource
-    ships a pool of worker processes.
+    Implementation of a *stateless* *RT-RAMSIS* seismicity forecast model (SFM)
+    worker resource. The resource ships a pool of worker processes.
 
     By default model results are written to a DB.
     """
@@ -259,10 +258,10 @@ class RamsisWorkerListResource(RamsisWorkerBaseResource):
             tasks = session.query(orm.Task).\
                 all()
 
-            msgs = [WorkerOutputMessage.from_task(t) for t in tasks]
+            msgs = [SFMWorkerOutputMessage.from_task(t) for t in tasks]
             self.logger.debug('Response msgs: {}'.format(msgs))
 
-            return make_response(msgs, serializer=WorkerOutputMessageSchema,
+            return make_response(msgs, serializer=SFMWorkerOutputMessageSchema,
                                  many=True)
 
         except Exception as err:
@@ -319,13 +318,13 @@ class RamsisWorkerListResource(RamsisWorkerBaseResource):
 
         # create a task; inject model_default parameters
         t = Task(
-            model=self._model(**current_app.config['RAMSIS_MODEL_DEFAULTS']),
+            model=self._model(**current_app.config['RAMSIS_SFM_DEFAULTS']),
             task_id=task_id,
             db_url=current_app.config['SQLALCHEMY_DATABASE_URI'], **args)
 
         _ = self._pool().apply_async(t) # noqa
 
-        msg = WorkerOutputMessage.accepted(task_id)
+        msg = SFMWorkerOutputMessage.accepted(task_id)
         self.logger.debug('Task ({}) accepted.'.format(task_id))
 
         return make_response(msg)
@@ -346,12 +345,12 @@ class RamsisWorkerListResource(RamsisWorkerBaseResource):
         overloading this template function and using a model specific schema
         allows the validation of the :code:`model_parameters` property.
         """
-        return parser.parse(WorkerInputMessageSchema(), request,
+        return parser.parse(SFMWorkerInputMessageSchema(), request,
                             locations=locations)
 
     # _parse ()
 
-# class RamsisWorkerListResource
+# class SFMRamsisWorkerListResource
 
 
 # ---- END OF <resource.py> ----
