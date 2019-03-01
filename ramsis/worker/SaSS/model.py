@@ -13,14 +13,15 @@
 <https://library.seg.org/doi/10.1190/1.3353727>`_) model facilities.
 """
 
+import io
+
 from collections import ChainMap
 
 from osgeo import ogr, osr
-from obspy.io.quakeml.core import Unpickler as QuakeMLDeserializer
+from obspy import read_events
 
 #from ramsis.worker.SaSS.core import sass
-from ramsis.worker.SaSS.core import DEFAULT_DIM_VOXEL
-from ramsis.worker.SaSS.core.reservoir import Reservoir
+#from ramsis.worker.SaSS.core.reservoir import Reservoir
 
 from ramsis.worker.utils import orm
 from ramsis.worker.utils.model import (Model as _Model, ModelError,
@@ -70,9 +71,8 @@ class Model(_Model):
         self.logger.debug(format_msg('Importing input parameters ...'))
 
         self.logger.debug(format_msg('Importing seismic catalog ...'))
-        cat = QuakeMLDeserializer().loads(
-            kwargs['seismic_catalog']['quakeml'].encode('utf-8'))
-
+        cat = read_events(
+            io.BytesIO(kwargs['seismic_catalog']['quakeml'].encode('utf-8')))
         self.logger.debug(format_msg(
             'Received seismic catalog with {} event(s).'.format(len(cat))))
 
