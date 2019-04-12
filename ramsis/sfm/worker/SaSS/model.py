@@ -20,11 +20,11 @@ from collections import ChainMap
 from osgeo import ogr, osr
 from obspy import read_events
 
-#from ramsis.worker.SaSS.core import sass
-#from ramsis.worker.SaSS.core.reservoir import Reservoir
+#from ramsis.sfm.worker.SaSS.core import sass
+#from ramsis.sfm.worker.SaSS.core.reservoir import Reservoir
 
-from ramsis.worker.utils import orm
-from ramsis.worker.utils.model import (Model as _Model, ModelError,
+from ramsis.sfm.worker.utils import orm
+from ramsis.sfm.worker.utils.model import (Model as _Model, ModelError,
                                        ModelResult)
 
 
@@ -47,7 +47,7 @@ class Model(_Model):
         default.
     """
 
-    LOGGER = 'ramsis.worker.model_sass'
+    LOGGER = 'ramsis.sfm.worker.model_sass'
 
     NAME = 'SaSS'
     DESCRIPTION = 'Shapiro and Smoothed Seismicity'

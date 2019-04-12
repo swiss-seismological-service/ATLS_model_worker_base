@@ -14,12 +14,12 @@ SaSS resource facilities.
 
 from flask_restful import Api
 
-from ramsis.worker.SaSS import db, settings
-from ramsis.worker.SaSS.model import Model
-from ramsis.worker.SaSS.v1 import blueprint
-from ramsis.worker.SaSS.v1.schema import SFMWorkerInputMessageSchema
-from ramsis.worker.utils.parser import parser
-from ramsis.worker.utils.resource import (SFMRamsisWorkerResource,
+from ramsis.sfm.worker.SaSS import db, settings
+from ramsis.sfm.worker.SaSS.model import Model
+from ramsis.sfm.worker.SaSS.v1 import blueprint
+from ramsis.sfm.worker.SaSS.v1.schema import SFMWorkerInputMessageSchema
+from ramsis.sfm.worker.utils.parser import parser
+from ramsis.sfm.worker.utils.resource import (SFMRamsisWorkerResource,
                                           SFMRamsisWorkerListResource)
 
 
@@ -28,7 +28,7 @@ api_v1 = Api(blueprint)
 
 class SaSSAPI(SFMRamsisWorkerResource):
 
-    LOGGER = 'ramsis.worker.sass_resource'
+    LOGGER = 'ramsis.sfm.worker.sass_resource'
 
 # class SaSSAPI
 
@@ -37,9 +37,9 @@ class SaSSListAPI(SFMRamsisWorkerListResource):
     Concrete implementation of an asynchronous SaSS worker resource.
 
     :param model: Model to be handled by :py:class:`SaSSListAPI`.
-    :type model: :py:class:`ramsis.worker.SaSS.model.SaSSModel`
+    :type model: :py:class:`ramsis.sfm.worker.SaSS.model.SaSSModel`
     """
-    LOGGER = 'ramsis.worker.sass_list_resource'
+    LOGGER = 'ramsis.sfm.worker.sass_list_resource'
 
     def _parse(self, request, locations=('json', )):
         return parser.parse(SFMWorkerInputMessageSchema(), request,

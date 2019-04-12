@@ -30,7 +30,7 @@ def create_app(config_dict={}):
     db.init_app(app)
 
     # XXX(damb): Avoid circular imports.
-    from ramsis.worker.SaSS.v1 import blueprint as api_v1_bp, API_VERSION_V1
+    from ramsis.sfm.worker.SaSS.v1 import blueprint as api_v1_bp, API_VERSION_V1
     app.register_blueprint(
         api_v1_bp,
         url_prefix='/v{version}'.format(version=API_VERSION_V1))

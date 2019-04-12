@@ -11,7 +11,7 @@
 
 from marshmallow import fields, Schema
 
-from ramsis.worker.SaSS import core
+from ramsis.sfm.worker.SaSS import core
 from ramsis.utils.protocol import SFMWorkerInputMessageSchema as \
     _SFMWorkerInputMessageSchema
 

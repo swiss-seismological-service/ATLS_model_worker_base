@@ -16,6 +16,6 @@ API_VERSION = API_VERSION_V1
 blueprint = Blueprint('v1', __name__)
 
 # XXX(damb): Register modules with blueprint.
-from ramsis.worker.SaSS.v1 import routes, schema
+from ramsis.sfm.worker.SaSS.v1 import routes, schema
 
 # ---- END OF <__init__.py> ----

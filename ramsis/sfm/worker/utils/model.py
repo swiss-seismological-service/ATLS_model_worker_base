@@ -18,8 +18,8 @@ import logging
 from ramsis.utils.error import Error
 from ramsis.utils.protocol import (SFMWorkerOutputMessage as ModelResult,
                                    StatusCode)
-from ramsis.worker.utils import escape_newline
-from ramsis.worker.utils.orm import Model as _Model
+from ramsis.sfm.worker.utils import escape_newline
+from ramsis.sfm.worker.utils.orm import Model as _Model
 
 
 class ModelError(Error):
@@ -31,7 +31,7 @@ class InvalidConfiguration(ModelError):
 # -----------------------------------------------------------------------------
 def with_exception_handling(func):
     """
-    Method decorator catching unhandled :py:class:`ramsis.worker.utils.Model`
+    Method decorator catching unhandled :py:class:`ramsis.sfm.worker.utils.Model`
     exceptions. Exceptions are wrapped into a valid result.
     """
     @functools.wraps(func)
@@ -62,7 +62,7 @@ class Model(object):
     """
     RT-RAMSIS :py:class:`Model` base class.
     """
-    LOGGER = 'ramsis.worker.model'
+    LOGGER = 'ramsis.sfm.worker.model'
     NAME = 'MODEL'
     DESCRIPTION = ''
 
@@ -90,7 +90,7 @@ class Model(object):
         """
         Template method called when running a model *task*. This method
         **must** be implemented by concrete
-        :py:class:`ramsis.worker.utils.Model` implementations.
+        :py:class:`ramsis.sfm.worker.utils.Model` implementations.
 
         Ideally, an instance of :py:class:`ModelResult` is returned to make use
         of data serialization techniques.

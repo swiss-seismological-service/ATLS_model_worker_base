@@ -16,9 +16,9 @@ import collections
 
 import numpy as np
 
-from ramsis.worker.SaSS.core import DEFAULT_DIM_VOXEL
-from ramsis.worker.SaSS.core.utils import SaSSCoreError
-from ramsis.worker.utils.extensions.misc import CoordinateMixin as Coordinate
+from ramsis.sfm.worker.SaSS.core import DEFAULT_DIM_VOXEL
+from ramsis.sfm.worker.SaSS.core.utils import SaSSCoreError
+from ramsis.sfm.worker.utils.extensions.misc import CoordinateMixin as Coordinate
 
 
 # ----------------------------------------------------------------------------

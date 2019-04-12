@@ -28,9 +28,9 @@ from ramsis.utils.protocol import (StatusCode, SFMWorkerInputMessageSchema,
                                    SFMWorkerOutputMessage,
                                    SFMWorkerOutputMessageSchema,
                                    MIMETYPE)
-from ramsis.worker.utils import orm
-from ramsis.worker.utils.task import Task
-from ramsis.worker.utils.parser import parser
+from ramsis.sfm.worker.utils import orm
+from ramsis.sfm.worker.utils.task import Task
+from ramsis.sfm.worker.utils.parser import parser
 
 
 # -----------------------------------------------------------------------------
@@ -110,7 +110,7 @@ class RamsisWorkerBaseResource(Resource):
     :type db: :py:class:`flask_sqlalchemy.SQLAlchemy`
     """
 
-    LOGGER = 'ramsis.worker.worker_resource'
+    LOGGER = 'ramsis.sfm.worker.worker_resource'
 
     def __init__(self, db):
         self.logger = logging.getLogger(self.LOGGER)

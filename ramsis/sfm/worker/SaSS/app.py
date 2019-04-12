@@ -20,9 +20,9 @@ import traceback
 
 from ramsis.utils.app import CustomParser, App, AppError
 from ramsis.utils.error import Error, ExitCode
-from ramsis.worker import settings as global_settings
-from ramsis.worker.utils import escape_newline, url
-from ramsis.worker.SaSS import __version__, create_app, settings
+from ramsis.sfm.worker import settings as global_settings
+from ramsis.sfm.worker.utils import escape_newline, url
+from ramsis.sfm.worker.SaSS import __version__, create_app, settings
 
 
 def model_defaults(config_dict):
@@ -97,7 +97,7 @@ class SaSSWorkerWebservice(App):
         :rtype: :py:class:`argparse.ArgumentParser`
         """
         parser = CustomParser(
-            prog="ramsis-worker-sass",
+            prog="ramsis.sfm.worker-sass",
             description='Launch SaSS worker webservice.',
             parents=parents)
         # optional arguments
