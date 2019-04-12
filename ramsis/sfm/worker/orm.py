@@ -100,11 +100,11 @@ class Task(LastSeenMixin, ORMBase):
     model_ref = Column(Integer, ForeignKey('model.oid'))
     result_ref = Column(Integer, ForeignKey('reservoir.oid'))
 
-    result = relationship("ramsis.sfm.worker.utils.orm.Reservoir", uselist=False,
+    result = relationship("ramsis.sfm.worker.orm.Reservoir", uselist=False,
                           cascade="all, delete, delete-orphan",
                           single_parent=True)
 
-    model = relationship("ramsis.sfm.worker.utils.orm.Model",
+    model = relationship("ramsis.sfm.worker.orm.Model",
                          back_populates="tasks")
 
     @classmethod
@@ -132,7 +132,7 @@ class Model(ORMBase):
     name = Column(String, unique=True)
     description = Column(String)
 
-    tasks = relationship("ramsis.sfm.worker.utils.orm.Task",
+    tasks = relationship("ramsis.sfm.worker.orm.Task",
                          back_populates="model")
 
     def __repr__(self):
@@ -153,7 +153,7 @@ class Reservoir(LastSeenMixin, ORMBase):
     b_value = Column(Float)
     rate_probability = Column(Float)
 
-    sub_geometries = relationship('ramsis.sfm.worker.utils.orm.Reservoir')
+    sub_geometries = relationship('ramsis.sfm.worker.orm.Reservoir')
 
     def wkt(self):
         try:
