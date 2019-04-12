@@ -62,10 +62,6 @@ _extras_require = {'doc': [
 
 _tests_require = []
 
-_dependency_links = [(
-    "git+https://gitlab.seismo.ethz.ch/indu/ramsis.utils.git"
-    "#egg=ramsis.utils-0.1"), ]
-
 _data_files = [
     ('', ['LICENSE'])]
 
@@ -111,7 +107,6 @@ setup(
     platforms=['Linux', ],
     packages=_packages,
     data_files=_data_files,
-    dependency_links=_dependency_links,
     install_requires=_install_requires,
     extras_require=_extras_require,
     tests_require=_tests_require,
