@@ -49,8 +49,11 @@ _install_requires = [
     'Flask>=0.12.2',
     'Flask-RESTful>=0.3.6',
     'Flask-SQLAlchemy>=2.3.2',
+    'GDAL>=2.4',
+    'geoalchemy2>=0.6.1',
     'marshmallow>=3.0.0b12',
     'numpy<1.15',
+    'obspy==1.1.0',
     "ramsis.utils==0.1",
     "SQLAlchemy>=1.2.10",
     'webargs>=4.0.0', ]
