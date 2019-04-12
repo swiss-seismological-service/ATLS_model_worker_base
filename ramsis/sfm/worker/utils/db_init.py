@@ -17,8 +17,8 @@ from sqlalchemy import create_engine
 
 from ramsis.utils.app import CustomParser, App, AppError
 from ramsis.utils.error import Error, ExitCode
-from ramsis.worker import settings
-from ramsis.worker.utils import url, orm
+from ramsis.sfm.worker import settings
+from ramsis.sfm.worker.utils import url, orm
 
 __version__ = '0.1'
 
@@ -26,7 +26,7 @@ __version__ = '0.1'
 # ----------------------------------------------------------------------------
 class DBInitApp(App):
     """
-    Utility application initializing :py:mod:`ramsis.worker` specific DBs.
+    Utility application initializing :py:mod:`ramsis.sfm.worker` specific DBs.
     """
     def build_parser(self, parents=[]):
         """
@@ -37,7 +37,7 @@ class DBInitApp(App):
         :rtype: :py:class:`argparse.ArgumentParser`
         """
         parser = CustomParser(
-            prog="ramsis-worker-db-init",
+            prog="ramsis.sfm.worker-db-init",
             description='Initialize a DB for RT-RAMSIS workers.',
             parents=parents)
         # optional arguments
@@ -98,7 +98,7 @@ class DBInitApp(App):
 # ----------------------------------------------------------------------------
 def main():
     """
-    :py:class:`ramsis.worker.utils.db.DBInitApp` wrapper.
+    :py:class:`ramsis.sfm.worker.utils.db.DBInitApp` wrapper.
     """
 
     app = DBInitApp(log_id='RAMSIS')

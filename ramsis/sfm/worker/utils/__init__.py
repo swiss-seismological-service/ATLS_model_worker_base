@@ -9,7 +9,7 @@
 # 2018/04/03        V0.1    Daniel Armbruster
 # =============================================================================
 """
-General purpose ramsis.workers utilities
+General purpose ramsis.sfm.workers utilities
 """
 
 import argparse
@@ -30,7 +30,7 @@ def get_version(namespace_pkg_name=None):
             return pkg_resources.get_distribution(namespace_pkg_name).version
         raise
     except Exception:
-        return pkg_resources.get_distribution("ramsis.worker").version
+        return pkg_resources.get_distribution("ramsis.sfm.worker").version
 
 # get_version ()
 

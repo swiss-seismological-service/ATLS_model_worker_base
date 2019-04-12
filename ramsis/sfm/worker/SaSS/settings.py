@@ -7,8 +7,8 @@
 """
 General purpose configuration constants.
 """
-from ramsis.worker import settings
-from ramsis.worker.SaSS.core import (DEFAULT_DIM_VOXEL, DEFAULT_NUM_KERNELS)
+from ramsis.sfm.worker import settings
+from ramsis.sfm.worker.SaSS.core import (DEFAULT_DIM_VOXEL, DEFAULT_NUM_KERNELS)
 
 RAMSIS_WORKER_SASS_ID = 'SaSS'
 RAMSIS_WORKER_SASS_PORT = 5000

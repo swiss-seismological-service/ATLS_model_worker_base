@@ -21,8 +21,8 @@ from sqlalchemy.orm import sessionmaker
 
 from ramsis.utils.error import ErrorWithTraceback
 from ramsis.utils.protocol import StatusCode
-from ramsis.worker.utils import escape_newline
-from ramsis.worker.utils import orm
+from ramsis.sfm.worker.utils import escape_newline
+from ramsis.sfm.worker.utils import orm
 
 
 # -----------------------------------------------------------------------------
@@ -35,7 +35,7 @@ class NoTaskModel(TaskError):
 # -----------------------------------------------------------------------------
 def with_exception_handling(func):
     """
-    Method decorator catching unhandled :py:class:`ramsis.worker.utils.Task`
+    Method decorator catching unhandled :py:class:`ramsis.sfm.worker.utils.Task`
     exceptions. Exceptions are simply logged.
     """
     @functools.wraps(func)
@@ -87,24 +87,24 @@ def with_logging(func):
 class Task(object):
     """
     :py:class:`Task` implementation running
-    :py:class:`ramsis.worker.utils.model.Model`s. Provides a top-level class
+    :py:class:`ramsis.sfm.worker.utils.model.Model`s. Provides a top-level class
     for easier pickling. In addition acts as a controller for the task's
     *actual* model (not to be confused with the scientific model).
 
-    :py:class:`ramsis.worker.utils.model.ModelResult`s are written to a
+    :py:class:`ramsis.sfm.worker.utils.model.ModelResult`s are written to a
     database.
 
-    :param model: :py:class:`ramsis.worker.utils.Model` instance to be run
-    :type model: :py:class:`ramsis.worker.utils.Model`
+    :param model: :py:class:`ramsis.sfm.worker.utils.Model` instance to be run
+    :type model: :py:class:`ramsis.sfm.worker.utils.Model`
     :param db_session: Database session instance
     :type db_session: :py:class:`sqlalchemy.orm.session.Session`
     :param task_id: Task identifier
     :type task_id: :py:class:`ùuid.UUID`
     :param kwargs: Keyword value parameters used when running the
-        :py:class:`ramsis.worker.utils.model.Model`.
+        :py:class:`ramsis.sfm.worker.utils.model.Model`.
     """
 
-    LOGGER = 'ramsis.worker.task'
+    LOGGER = 'ramsis.sfm.worker.task'
 
     def __init__(self, model, db_url, task_id=None, **kwargs):
         self.logger = logging.getLogger(self.LOGGER)
@@ -142,7 +142,7 @@ class Task(object):
         Execute a model with a concrete parameter configuration.
 
         :param kwargs: Extra keyword value parameters passed to the
-            :py:class:`ramsis.worker.utils.Model` instance, additionally.
+            :py:class:`ramsis.sfm.worker.utils.Model` instance, additionally.
         """
         return self._model(task_id=self.id, **self._task_args, **kwargs)
 

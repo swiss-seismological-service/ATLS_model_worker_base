@@ -15,7 +15,7 @@ RAMSIS worker facilities related seismology.
 import collections
 import datetime
 
-from ramsis.worker.utils.extensions.misc import CoordinateMixin, DEFAULT_PROJ
+from ramsis.sfm.worker.utils.extensions.misc import CoordinateMixin, DEFAULT_PROJ
 
 
 class Catalog(collections.namedtuple('Catalog', ['date', 'events'])):

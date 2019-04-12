@@ -13,7 +13,7 @@ General purpose configuration constants.
 """
 
 # -----------------------------------------------------------------------------
-# General ramsis worker configuration
+# General ramsis.sfm.worker configuration
 # -----------------------------------------------------------------------------
 PATH_RAMSIS_WORKER_CONFIG = '/path/to/ramsis_config'
 # worker resource URL path

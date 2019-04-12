@@ -4,14 +4,14 @@
 # Copyright (c) 2018 by Daniel Armbruster (SED, ETHZ),
 #                       Lukas Heiniger (SED, ETHZ)
 #
-# setup.py (ramsis.worker)
+# setup.py (ramsis.sfm.worker)
 #
 # REVISIONS and CHANGES
 # 2018/04/03    V1.0   Daniel Armbruster
 #
 # ============================================================================
 """
-setup.py for ramsis.worker
+setup.py for ramsis.sfm.worker
 
 .. note:
 
@@ -49,14 +49,16 @@ _install_requires = [
     'Flask>=0.12.2',
     'Flask-RESTful>=0.3.6',
     'Flask-SQLAlchemy>=2.3.2',
+    'GDAL>=2.4',
+    'geoalchemy2>=0.6.1',
     'marshmallow>=3.0.0b12',
     'numpy<1.15',
+    'obspy==1.1.0',
     "ramsis.utils==0.1",
     "SQLAlchemy>=1.2.10",
     'webargs>=4.0.0', ]
 
 _extras_require = {'doc': [
-    "epydoc==3.0.1",
     "sphinx==1.4.1",
     "sphinx-rtd-theme==0.1.9", ]}
 
@@ -71,30 +73,30 @@ _data_files = [
 
 _entry_points_sass = {
     'console_scripts': [
-        'ramsis-worker-sass = ramsis.worker.SaSS.app:main',
-        'ramsis-worker-db-init = ramsis.worker.utils.db_init:main']}
+        'ramsis-worker-sass = ramsis.sfm.worker.SaSS.app:main',
+        'ramsis-worker-db-init = ramsis.sfm.worker.utils.db_init:main']}
 _entry_points = _entry_points_sass.copy()
 
-_name = 'ramsis.worker'
-_version = get_version(os.path.join('ramsis', 'worker', '__init__.py'))
+_name = 'ramsis.sfm.worker'
+_version = get_version(os.path.join('ramsis', 'sfm', 'worker', '__init__.py'))
 _description = ('RT-RAMSIS worker component.')
-_packages = ['ramsis.worker',
-             'ramsis.worker.utils',
-             'ramsis.worker.SaSS', ]
+_packages = ['ramsis.sfm.worker',
+             'ramsis.sfm.worker.utils',
+             'ramsis.sfm.worker.SaSS', ]
 
 subsys = sys.argv[1]
 if subsys == 'SaSS':
     sys.argv.pop(1)
 
-    _version = get_version(os.path.join('ramsis', 'worker', 'SaSS',
+    _version = get_version(os.path.join('ramsis', 'sfm', 'worker', 'SaSS',
                                         '__init__.py'))
 
     _description = ('Model SaSS from the RT-RAMSIS worker component.')
     # TODO(damb): adjust includes/excludes
-    _packages = ['ramsis.worker',
-                 'ramsis.worker.utils',
-                 'ramsis.worker.SaSS',
-                 'ramsis.worker.SaSS.v1', ]
+    _packages = ['ramsis.sfm.worker',
+                 'ramsis.sfm.worker.utils',
+                 'ramsis.sfm.worker.SaSS',
+                 'ramsis.sfm.worker.SaSS.v1', ]
     _entry_points = _entry_points_sass
 
 
@@ -114,7 +116,7 @@ setup(
         'risk mitigation',
         'realtime',
         'seismology'],
-    url='https://gitlab.seismo.ethz.ch/indu/ramsis.worker.git',
+    url='https://gitlab.seismo.ethz.ch/indu/ramsis.sfm.worker.git',
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Environment :: Console',
