@@ -6,22 +6,22 @@
 
 ## Concept
 
-`RT-RAMSIS` workers wrap forecast models providing a RESTful API. Workers
-handle requests, control the forecast computation and both return and delete
-results when requested. Workers are implemented as stateless webservices using
-the [Flask](http://flask.pocoo.org/) framework.
+`RT-RAMSIS` SFM-Workers wrap forecast models providing a RESTful API.
+SFM-Workers handle requests, control the forecast computation and both return
+and delete results when requested. Workers are implemented as stateless
+webservices using the [Flask](http://flask.pocoo.org/) framework.
 
 A worker basically consists of the following parts:
 
 * A *resource* which provides the web service API
 * A *model* implementing the scientific forecast model
-* A *task* executing the forecast model
+* A *task* wrapping the forecast model
 * A *schema* to deserialize model specific parameters included in the input
   message
 
 ## Implementation of a concrete SFM-Worker
 
-In order to fully implement a `RT-RAMSIS` worker API the `ramsis.worker`
+In order to fully implement a `RT-RAMSIS` SFM-Worker API the `ramsis.worker`
 package provides two general purpose implementations of
 [Flask-RESTful](https://flask-restful.readthedocs.io/en/latest/) resources:
 
