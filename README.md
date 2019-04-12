@@ -1,4 +1,10 @@
-# RT-RAMSIS Worker
+# RT-RAMSIS SFM-Worker Components
+
+## Installation
+
+**TODO**
+
+## Concept
 
 `RT-RAMSIS` workers wrap forecast models providing a RESTful API. Workers
 handle requests, control the forecast computation and both return and delete
@@ -13,7 +19,7 @@ A worker basically consists of the following parts:
 * A *schema* to deserialize model specific parameters included in the input
   message
 
-# Implementation
+## Implementation of a concrete SFM-Worker
 
 In order to fully implement a `RT-RAMSIS` worker API the `ramsis.worker`
 package provides two general purpose implementations of
