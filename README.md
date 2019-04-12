@@ -30,8 +30,8 @@ package provides two general purpose implementations of
 
 Hence, to implement a concrete worker follow this recipe:
 
-1. Provide a concrete implementation of `ramsis.worker.utils.model.Model`. A
-   model must return a valid `ramsis.worker.utils.model.ModelResult`.
+1. Provide a concrete implementation of `ramsis.sfm.worker.model.Model`. A
+   model must return a valid `ramsis.sfm.worker.model.ModelResult`.
 2. Provide a concrete implementation of
    `ramsis.sfm.worker.resource.RamsisWorkerListResource`. Optionally also for
    `ramsis.sfm.worker.resource.RamsisWorkerResource`.
