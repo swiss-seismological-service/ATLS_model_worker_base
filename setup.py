@@ -69,6 +69,9 @@ _entry_points = {
     'console_scripts': [
         'ramsis-worker-db-init = ramsis.sfm.worker.utils.db_init:main']}
 
+_extras = {
+    'postgis': ['psycopg2'], }
+
 _name = 'ramsis.sfm.worker'
 _version = get_version(os.path.join('ramsis', 'sfm', 'worker', '__init__.py'))
 _description = ('RT-RAMSIS worker component.')
