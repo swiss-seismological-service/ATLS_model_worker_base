@@ -52,8 +52,6 @@ _install_requires = [
     'GDAL>=2.4',
     'geoalchemy2>=0.6.1',
     'marshmallow>=3.0.0b12',
-    'numpy<1.15',
-    'obspy==1.1.0',
     "ramsis.utils==0.1",
     "SQLAlchemy>=1.2.10",
     'webargs>=4.0.0', ]
@@ -64,41 +62,21 @@ _extras_require = {'doc': [
 
 _tests_require = []
 
-_dependency_links = [(
-    "git+https://gitlab.seismo.ethz.ch/indu/ramsis.utils.git"
-    "#egg=ramsis.utils-0.1"), ]
-
 _data_files = [
     ('', ['LICENSE'])]
 
-_entry_points_sass = {
+_entry_points = {
     'console_scripts': [
-        'ramsis-worker-sass = ramsis.sfm.worker.SaSS.app:main',
         'ramsis-worker-db-init = ramsis.sfm.worker.utils.db_init:main']}
-_entry_points = _entry_points_sass.copy()
+
+_extras = {
+    'postgis': ['psycopg2'], }
 
 _name = 'ramsis.sfm.worker'
 _version = get_version(os.path.join('ramsis', 'sfm', 'worker', '__init__.py'))
 _description = ('RT-RAMSIS worker component.')
 _packages = ['ramsis.sfm.worker',
-             'ramsis.sfm.worker.utils',
-             'ramsis.sfm.worker.SaSS', ]
-
-subsys = sys.argv[1]
-if subsys == 'SaSS':
-    sys.argv.pop(1)
-
-    _version = get_version(os.path.join('ramsis', 'sfm', 'worker', 'SaSS',
-                                        '__init__.py'))
-
-    _description = ('Model SaSS from the RT-RAMSIS worker component.')
-    # TODO(damb): adjust includes/excludes
-    _packages = ['ramsis.sfm.worker',
-                 'ramsis.sfm.worker.utils',
-                 'ramsis.sfm.worker.SaSS',
-                 'ramsis.sfm.worker.SaSS.v1', ]
-    _entry_points = _entry_points_sass
-
+             'ramsis.sfm.worker.utils', ]
 
 # ----------------------------------------------------------------------------
 setup(
@@ -132,7 +110,6 @@ setup(
     platforms=['Linux', ],
     packages=_packages,
     data_files=_data_files,
-    dependency_links=_dependency_links,
     install_requires=_install_requires,
     extras_require=_extras_require,
     tests_require=_tests_require,
