@@ -19,7 +19,7 @@ from ramsis.utils.error import Error
 from ramsis.utils.protocol import (SFMWorkerOutputMessage as ModelResult,
                                    StatusCode)
 from ramsis.sfm.worker.utils import escape_newline
-from ramsis.sfm.worker.utils.orm import Model as _Model
+from ramsis.sfm.worker.orm import Model as _Model
 
 
 class ModelError(Error):
@@ -31,8 +31,9 @@ class InvalidConfiguration(ModelError):
 # -----------------------------------------------------------------------------
 def with_exception_handling(func):
     """
-    Method decorator catching unhandled :py:class:`ramsis.sfm.worker.utils.Model`
-    exceptions. Exceptions are wrapped into a valid result.
+    Method decorator catching unhandled
+    :py:class:`ramsis.sfm.worker.model.Model` exceptions. Exceptions are
+    wrapped into a valid result.
     """
     @functools.wraps(func)
     def decorator(self, *args, **kwargs):
@@ -40,7 +41,7 @@ def with_exception_handling(func):
             return func(self, *args, **kwargs)
         except Exception as err:
             msg = 'ModelError ({}-{}): {}'.format(type(self).__name__,
-                                                   type(err).__name__, err)
+                                                  type(err).__name__, err)
 
             self.logger.critical(escape_newline(msg))
             # XXX(damb): The decorator must return its result in a specific

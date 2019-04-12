@@ -28,9 +28,9 @@ from ramsis.utils.protocol import (StatusCode, SFMWorkerInputMessageSchema,
                                    SFMWorkerOutputMessage,
                                    SFMWorkerOutputMessageSchema,
                                    MIMETYPE)
-from ramsis.sfm.worker.utils import orm
-from ramsis.sfm.worker.utils.task import Task
-from ramsis.sfm.worker.utils.parser import parser
+from ramsis.sfm.worker import orm
+from ramsis.sfm.worker.task import Task
+from ramsis.sfm.worker.parser import parser
 
 
 # -----------------------------------------------------------------------------
