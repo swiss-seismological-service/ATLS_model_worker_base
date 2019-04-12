@@ -56,7 +56,6 @@ _install_requires = [
     'webargs>=4.0.0', ]
 
 _extras_require = {'doc': [
-    "epydoc==3.0.1",
     "sphinx==1.4.1",
     "sphinx-rtd-theme==0.1.9", ]}
 
