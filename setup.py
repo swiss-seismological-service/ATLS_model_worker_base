@@ -52,13 +52,16 @@ _install_requires = [
     'GDAL>=2.4',
     'geoalchemy2>=0.6.1',
     'marshmallow>=3.0.0b12',
+    'numpy==1.15',
     "ramsis.utils==0.1",
     "SQLAlchemy>=1.2.10",
     'webargs>=4.0.0', ]
 
-_extras_require = {'doc': [
-    "sphinx==1.4.1",
-    "sphinx-rtd-theme==0.1.9", ]}
+_extras_require = {
+    'doc': [
+        "sphinx==1.4.1",
+        "sphinx-rtd-theme==0.1.9", ],
+    'postgis': ['psycopg2'], }
 
 _tests_require = []
 
@@ -68,9 +71,6 @@ _data_files = [
 _entry_points = {
     'console_scripts': [
         'ramsis-worker-db-init = ramsis.sfm.worker.utils.db_init:main']}
-
-_extras = {
-    'postgis': ['psycopg2'], }
 
 _name = 'ramsis.sfm.worker'
 _version = get_version(os.path.join('ramsis', 'sfm', 'worker', '__init__.py'))
