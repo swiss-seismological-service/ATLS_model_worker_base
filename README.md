@@ -2,7 +2,20 @@
 
 ## Installation
 
-**TODO**
+Make sure that the following dependencies are installed:
+
+* libpq-dev
+* libgdal-dev
+
+Next, invoke:
+
+```
+pip install -r requirements.txt
+```
+
+Note, that encapsulating the installation by means of a [virtual
+environment](https://docs.python.org/3/tutorial/venv.html) is strongly
+recommended.
 
 ## Concept
 
