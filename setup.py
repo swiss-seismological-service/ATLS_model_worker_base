@@ -70,7 +70,7 @@ _data_files = [
 
 _entry_points = {
     'console_scripts': [
-        'ramsis-worker-db-init = ramsis.sfm.worker.utils.db_init:main']}
+        'ramsis-sfm-worker-db-init = ramsis.sfm.worker.utils.db_init:main']}
 
 _name = 'ramsis.sfm.worker'
 _version = get_version(os.path.join('ramsis', 'sfm', 'worker', '__init__.py'))
