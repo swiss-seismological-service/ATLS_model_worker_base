@@ -18,7 +18,7 @@ import logging
 from ramsis.utils.error import Error
 from ramsis.utils.protocol import (SFMWorkerOutputMessage as ModelResult,
                                    StatusCode)
-from ramsis.sfm.worker.utils import escape_newline
+from ramsis.sfm.worker.utils import escape_newline, ContextLoggerAdapter
 from ramsis.sfm.worker.orm import Model as _Model
 
 
@@ -68,7 +68,8 @@ class Model(object):
     DESCRIPTION = ''
 
     def __init__(self):
-        self.logger = logging.getLogger(self.LOGGER)
+        self._logger = logging.getLogger(self.LOGGER)
+        self.logger = ContextLoggerAdapter(self._logger, {'ctx': self})
 
         self._stdout = None
         self._stderr = None
@@ -121,15 +122,18 @@ class Model(object):
     def __getstate__(self):
         # prevent pickling errors for loggers
         d = dict(self.__dict__)
+        if '_logger' in d.keys():
+            d['_logger'] = d['_logger'].name
         if 'logger' in d.keys():
-            d['logger'] = d['logger'].name
+            del d['logger']
         return d
 
     # __getstate__ ()
 
     def __setstate__(self, d):
-        if 'logger' in d.keys():
-            d['logger'] = logging.getLogger(d['logger'])
+        if '_logger' in d.keys():
+            d['_logger'] = logging.getLogger(d['_logger'])
+            d['logger'] = ContextLoggerAdapter(d['_logger'], {'ctx': self})
             self.__dict__.update(d)
 
     # __setstate__ ()

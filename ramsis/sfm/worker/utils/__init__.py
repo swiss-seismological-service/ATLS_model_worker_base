@@ -11,9 +11,10 @@
 """
 General purpose ramsis.sfm.workers utilities
 """
-
 import argparse
+import logging
 import pkg_resources
+
 
 # -----------------------------------------------------------------------------
 def get_version(namespace_pkg_name=None):
@@ -54,5 +55,15 @@ def url(url):
     return url
 
 # url ()
+
+
+class ContextLoggerAdapter(logging.LoggerAdapter):
+    """
+    Adapter expecting the passed in dict-like object to have a 'ctx' key, whose
+    value in brackets is prepended to the log message.
+    """
+    def process(self, msg, kwargs):
+        return '[%s] %s' % (self.extra['ctx'], msg), kwargs
+
 
 # ---- END OF <__init__.py> ----
