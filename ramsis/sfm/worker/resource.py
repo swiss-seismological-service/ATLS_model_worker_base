@@ -182,7 +182,7 @@ class SFMRamsisWorkerResource(RamsisWorkerBaseResource):
 
             return make_response(msg, status_code=200)
 
-        except NoResultFound as err:
+        except NoResultFound:
             self.logger.warning(
                 'No matching task found (id={}).'.format(task_id))
 
