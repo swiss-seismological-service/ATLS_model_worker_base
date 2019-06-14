@@ -135,7 +135,7 @@ class Model(object):
     # __setstate__ ()
 
     def __repr__(self):
-        return '<{}(name={})'.format(type(self).__name__, self.NAME)
+        return '<{}(name={})>'.format(type(self).__name__, self.NAME)
 
 # class Model
 
