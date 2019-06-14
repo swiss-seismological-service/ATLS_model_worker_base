@@ -26,8 +26,8 @@ from sqlalchemy.orm.exc import NoResultFound
 from ramsis.utils.error import Error
 from ramsis.utils.protocol import (StatusCode,
                                    SFMWorkerOutputMessage,
-                                   SFMWorkerOutputMessageSchema,
-                                   MIMETYPE)
+                                   SFMWorkerOutputMessageSchema)
+
 from ramsis.sfm.worker import orm
 from ramsis.sfm.worker.task import Task
 from ramsis.sfm.worker.parser import parser, SFMWorkerIMessageSchema
@@ -67,7 +67,7 @@ def make_response(msg, status_code=None,
                     raise
 
         resp = _make_response(serializer(**kwargs).dumps(msg), status_code)
-        resp.headers['Content-Type'] = MIMETYPE
+        resp.headers['Content-Type'] = 'application/json'
         #if msg.warning:
         #    resp.headers['Warning'] = '299 {}'.format(msg.warning)
         return resp
