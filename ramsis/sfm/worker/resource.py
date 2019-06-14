@@ -24,13 +24,13 @@ from flask_restful import Resource
 from sqlalchemy.orm.exc import NoResultFound
 
 from ramsis.utils.error import Error
-from ramsis.utils.protocol import (StatusCode, SFMWorkerInputMessageSchema,
+from ramsis.utils.protocol import (StatusCode,
                                    SFMWorkerOutputMessage,
                                    SFMWorkerOutputMessageSchema,
                                    MIMETYPE)
 from ramsis.sfm.worker import orm
 from ramsis.sfm.worker.task import Task
-from ramsis.sfm.worker.parser import parser
+from ramsis.sfm.worker.parser import parser, SFMWorkerIMessageSchema
 
 
 # -----------------------------------------------------------------------------
@@ -345,7 +345,7 @@ class SFMRamsisWorkerListResource(RamsisWorkerBaseResource):
         overloading this template function and using a model specific schema
         allows the validation of the :code:`model_parameters` property.
         """
-        return parser.parse(SFMWorkerInputMessageSchema(), request,
+        return parser.parse(SFMWorkerIMessageSchema(), request,
                             locations=locations)
 
     # _parse ()
