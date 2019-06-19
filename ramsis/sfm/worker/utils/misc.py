@@ -1,13 +1,4 @@
-# This is <misc.py>
-# -----------------------------------------------------------------------------
-#
-# Purpose: Worker utilities related to seismology.
-#
-# Copyright (c) Daniel Armbruster (SED, ETH)
-#
-# REVISION AND CHANGES
-# 2018/10/11        V0.1    Daniel Armbruster
-# =============================================================================
+# Copyright 2019, ETH Zurich - Swiss Seismological Service SED
 """
 Extensions for miscellaneous entities.
 """
@@ -49,8 +40,6 @@ def transform(x, y, z, p1_proj4, p2_proj4):
 
     return _transform(p1, p2, x, y, z)
 
-# transform ()
-
 # -----------------------------------------------------------------------------
 class CoordinateMixin(object):
 
@@ -67,8 +56,6 @@ class CoordinateMixin(object):
 
         self._proj = kwargs.get('proj', DEFAULT_PROJ)
 
-    # __init__ ()
-
     def transform(self, p2):
         if not self._proj:
             raise self.MissingProjection()
@@ -80,8 +67,6 @@ class CoordinateMixin(object):
 
         self._x, self._y, self._z = transform(
             self._x, self._y, self._z, p1_proj4=self._proj, p2_proj4=p2)
-
-    # transform ()
 
     @classmethod
     def from_wkt(cls, wkt, proj=DEFAULT_PROJ):
@@ -111,8 +96,6 @@ class CoordinateMixin(object):
         except Exception as err:
             raise ValueError(err)
 
-    # from_wkt ()
-
     def wkt(self):
         if self._proj:
             warnings.warn(
@@ -123,7 +106,3 @@ class CoordinateMixin(object):
     def __repr__(self):
         return '<CoordinateMixin(x=%s, y=%s, z=%s)>' % (
             self._x, self._y, self._z)
-
-# class CoordinateMixin
-
-# ---- END OF <misc.py> ----

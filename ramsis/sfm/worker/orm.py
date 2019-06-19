@@ -1,11 +1,4 @@
-# This is <orm.py>
-# -----------------------------------------------------------------------------
-#
-# Copyright (c) Daniel Armbruster (SED, ETH), Lukas Heiniger (SED, ETH)
-#
-# REVISION AND CHANGES
-# 2018/09/03        V0.1    Daniel Armbruster
-# =============================================================================
+# Copyright 2019, ETH Zurich - Swiss Seismological Service SED
 """
 ORM facilities.
 """
@@ -60,8 +53,6 @@ class GUID(TypeDecorator):
                 value = uuid.UUID(value)
             return value
 
-# class GUID
-
 
 # -----------------------------------------------------------------------------
 class Base(object):
@@ -72,8 +63,6 @@ class Base(object):
 
     oid = Column(Integer, primary_key=True)
 
-# class Base
-
 
 class LastSeenMixin(object):
 
@@ -81,8 +70,6 @@ class LastSeenMixin(object):
     def lastseen(cls):
         return Column(DateTime, default=datetime.datetime.utcnow,
                       onupdate=datetime.datetime.utcnow)
-
-# class LastSeenMixin
 
 
 ORMBase = declarative_base(cls=Base)
@@ -122,8 +109,6 @@ class Task(LastSeenMixin, ORMBase):
     def __repr__(self):
         return "<{}(id={})>".format(type(self).__name__, self.id)
 
-# class Task
-
 
 class Model(ORMBase):
     """
@@ -137,8 +122,6 @@ class Model(ORMBase):
 
     def __repr__(self):
         return "<{}(name={})>".format(type(self).__name__, self.name)
-
-# class Model
 
 
 class Reservoir(LastSeenMixin, ORMBase):
@@ -166,8 +149,3 @@ class Reservoir(LastSeenMixin, ORMBase):
         return "<{}(geom={}, sub_geoms={})>".format(type(self).__name__,
                                                     self.wkt(),
                                                     self.sub_geometries)
-
-# class Reservoir
-
-
-# ---- END OF <orm.py> ----

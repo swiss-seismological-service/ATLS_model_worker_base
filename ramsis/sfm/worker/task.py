@@ -1,13 +1,4 @@
-# This is <task.py>
-# -----------------------------------------------------------------------------
-#
-# Purpose: Provide an ABC for a Task.
-#
-# Copyright (c) Daniel Armbruster (SED, ETH), Lukas Heiniger (SED, ETH)
-#
-# REVISION AND CHANGES
-# 2018/04/10        V0.1    Daniel Armbruster
-# =============================================================================
+# Copyright 2019, ETH Zurich - Swiss Seismological Service SED
 """
 Task facilities.
 """
@@ -28,14 +19,17 @@ from ramsis.sfm.worker.utils import escape_newline, StatusCode
 class TaskError(ErrorWithTraceback):
     """Base task error ({})."""
 
+
 class NoTaskModel(TaskError):
     """Task model not available ({})."""
+
 
 # -----------------------------------------------------------------------------
 def with_exception_handling(func):
     """
-    Method decorator catching unhandled :py:class:`ramsis.sfm.worker.utils.Task`
-    exceptions. Exceptions are simply logged.
+    Method decorator catching unhandled
+    :py:class:`ramsis.sfm.worker.utils.Task` exceptions. Exceptions are simply
+    logged.
     """
     @functools.wraps(func)
     def decorator(self, *args, **kwargs):
@@ -49,7 +43,6 @@ def with_exception_handling(func):
 
     return decorator
 
-# with_exception_handling ()
 
 def with_logging(func):
     """
@@ -79,15 +72,13 @@ def with_logging(func):
 
     return decorator
 
-# with_logging ()
-
 
 # -----------------------------------------------------------------------------
 class Task(object):
     """
     :py:class:`Task` implementation running
-    :py:class:`ramsis.sfm.worker.utils.model.Model`s. Provides a top-level class
-    for easier pickling. In addition acts as a controller for the task's
+    :py:class:`ramsis.sfm.worker.utils.model.Model`s. Provides a top-level
+    class for easier pickling. In addition acts as a controller for the task's
     *actual* model (not to be confused with the scientific model).
 
     :py:class:`ramsis.sfm.worker.utils.model.ModelResult`s are written to a
@@ -113,8 +104,6 @@ class Task(object):
         self._task_id = task_id if task_id is not None else uuid.uuid4()
         self._task_args = kwargs
 
-    # __init__ ()
-
     @property
     def id(self):
         return self._task_id
@@ -126,14 +115,10 @@ class Task(object):
             d['logger'] = d['logger'].name
         return d
 
-    # __getstate__ ()
-
     def __setstate__(self, d):
         if 'logger' in d.keys():
             d['logger'] = logging.getLogger(d['logger'])
             self.__dict__.update(d)
-
-    # __setstate__ ()
 
     @with_logging
     def _run(self, **kwargs):
@@ -201,12 +186,5 @@ class Task(object):
         finally:
             session.close()
 
-    # __call__ ()
-
     def __repr__(self):
         return '<{}(id={})'.format(type(self).__name__, self.id)
-
-# class Task
-
-
-# ---- END OF <task.py> ----
