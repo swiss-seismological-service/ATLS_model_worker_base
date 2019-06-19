@@ -60,8 +60,8 @@ def make_response(msg, status_code=None,
 
         resp = _make_response(serializer(**kwargs).dumps(msg), status_code)
         resp.headers['Content-Type'] = 'application/json'
-        #if msg.warning:
-        #    resp.headers['Warning'] = '299 {}'.format(msg.warning)
+        # if msg.warning:
+        #     resp.headers['Warning'] = '299 {}'.format(msg.warning)
         return resp
 
     except Exception as err:
@@ -130,7 +130,7 @@ class SFMRamsisWorkerResource(RamsisWorkerBaseResource):
         session = self._db.session
         try:
             task = session.query(orm.Task).\
-                filter(orm.Task.id==task_id).\
+                filter(orm.Task.id == task_id).\
                 one()
 
             msg = SFMWorkerOutputMessage.from_task(task)
@@ -156,7 +156,7 @@ class SFMRamsisWorkerResource(RamsisWorkerBaseResource):
         session = self._db.session
         try:
             task = session.query(orm.Task).\
-                filter(orm.Task.id==task_id).\
+                filter(orm.Task.id == task_id).\
                 one()
 
             msg = SFMWorkerOutputMessage.from_task(task)
@@ -267,8 +267,8 @@ class SFMRamsisWorkerListResource(RamsisWorkerBaseResource):
             m_model = self._model.orm()
             existing_m_model = \
                 session.query(orm.Model).\
-                filter(orm.Model.name==m_model.name).\
-                filter(orm.Model.description==m_model.description).\
+                filter(orm.Model.name == m_model.name).\
+                filter(orm.Model.description == m_model.description).\
                 one_or_none()
 
             if existing_m_model:

@@ -16,8 +16,10 @@ from ramsis.sfm.worker.orm import Model as _Model
 class ModelError(Error):
     """Base model error ({})."""
 
+
 class InvalidConfiguration(ModelError):
     """Invalid configuration ({})."""
+
 
 # -----------------------------------------------------------------------------
 def with_exception_handling(func):

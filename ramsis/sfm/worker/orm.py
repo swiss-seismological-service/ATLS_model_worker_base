@@ -8,8 +8,7 @@ import uuid
 
 from geoalchemy2 import Geometry
 from osgeo import ogr
-from sqlalchemy import (Column, Integer, Float, String, DateTime, ForeignKey,
-                        inspect)
+from sqlalchemy import Column, Integer, Float, String, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declared_attr, declarative_base
 from sqlalchemy.orm import relationship
@@ -17,7 +16,7 @@ from sqlalchemy.types import TypeDecorator, CHAR
 
 from ramsis.sfm.worker.utils import StatusCode
 
-# -----------------------------------------------------------------------------
+
 class GUID(TypeDecorator):
     """
     Platform-independent GUID type.

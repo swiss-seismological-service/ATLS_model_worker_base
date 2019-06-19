@@ -10,7 +10,7 @@ from ramsis.utils.error import ErrorWithTraceback
 from osgeo import ogr, osr
 from pyproj import Proj, transform as _transform
 
-#DEFAULT_PROJ = '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs'
+# DEFAULT_PROJ = '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs'
 DEFAULT_PROJ = ''
 
 
@@ -39,6 +39,7 @@ def transform(x, y, z, p1_proj4, p2_proj4):
     p2 = Proj(p2_proj4)
 
     return _transform(p1, p2, x, y, z)
+
 
 # -----------------------------------------------------------------------------
 class CoordinateMixin(object):

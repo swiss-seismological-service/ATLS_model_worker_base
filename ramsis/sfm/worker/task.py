@@ -141,7 +141,7 @@ class Task(object):
         # XXX(damb): fetch orm.Task from DB and update task state
         try:
             m_task = session.query(orm.Task).\
-                filter(orm.Task.id==self.id).\
+                filter(orm.Task.id == self.id).\
                 one()
 
             m_task.status = StatusCode.TaskProcessing.name
@@ -164,7 +164,7 @@ class Task(object):
                     self, self._db_url))
 
             m_task = session.query(orm.Task).\
-                filter(orm.Task.id==self.id).\
+                filter(orm.Task.id == self.id).\
                 one()
 
             m_task.status = retval.status
@@ -182,7 +182,7 @@ class Task(object):
 
         except Exception as err:
             session.rollback()
-            raise
+            raise err
         finally:
             session.close()
 
