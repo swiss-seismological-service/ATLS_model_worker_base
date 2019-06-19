@@ -199,7 +199,6 @@ class SFMWorkerIMessageSchema(SchemaBase):
     model_parameters = fields.Dict(keys=fields.Str())
 
 
-# Flask-RESTful error handler
 @_parser.error_handler
 def handle_request_parsing_error(err, req, schema):
     """
