@@ -12,6 +12,7 @@
 General purpose ramsis.sfm.workers utilities
 """
 import argparse
+import enum
 import logging
 import pkg_resources
 
@@ -65,5 +66,20 @@ class ContextLoggerAdapter(logging.LoggerAdapter):
     def process(self, msg, kwargs):
         return '[%s] %s' % (self.extra['ctx'], msg), kwargs
 
+
+class StatusCode(enum.Enum):
+    """
+    SFM-Worker status code enum.
+    """
+    # codes related to worker states
+    TaskAccepted = 202
+    TaskProcessing = 423
+    TaskError = 418
+    TaskCompleted = 200
+    TaskNotAvailable = 204
+    # codes related to worker resource
+    HTTPMethodNotAllowed = 405
+    UnprocessableEntity = 422
+    WorkerError = 500
 
 # ---- END OF <__init__.py> ----

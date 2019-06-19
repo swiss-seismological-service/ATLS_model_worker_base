@@ -22,7 +22,7 @@ from sqlalchemy.ext.declarative import declared_attr, declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.types import TypeDecorator, CHAR
 
-from ramsis.utils.protocol import StatusCode
+from ramsis.sfm.worker.utils import StatusCode
 
 # -----------------------------------------------------------------------------
 class GUID(TypeDecorator):
@@ -115,8 +115,8 @@ class Task(LastSeenMixin, ORMBase):
 
     @classmethod
     def pending(cls, id, model):
-        return cls(id=id, status=StatusCode.TaskCurrentlyProcessing.name,
-                   status_code=StatusCode.TaskCurrentlyProcessing.value,
+        return cls(id=id, status=StatusCode.TaskProcessing.name,
+                   status_code=StatusCode.TaskProcessing.value,
                    model=model)
 
     def __repr__(self):

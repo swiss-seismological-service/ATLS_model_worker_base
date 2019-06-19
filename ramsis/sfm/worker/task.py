@@ -20,9 +20,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from ramsis.utils.error import ErrorWithTraceback
-from ramsis.utils.protocol import StatusCode
-from ramsis.sfm.worker.utils import escape_newline
 from ramsis.sfm.worker import orm
+from ramsis.sfm.worker.utils import escape_newline, StatusCode
 
 
 # -----------------------------------------------------------------------------
@@ -160,8 +159,8 @@ class Task(object):
                 filter(orm.Task.id==self.id).\
                 one()
 
-            m_task.status = StatusCode.TaskCurrentlyProcessing.name
-            m_task.status_code = StatusCode.TaskCurrentlyProcessing.value
+            m_task.status = StatusCode.TaskProcessing.name
+            m_task.status_code = StatusCode.TaskProcessing.value
 
             session.commit()
 

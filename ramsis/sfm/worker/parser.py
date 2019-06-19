@@ -20,7 +20,7 @@ from marshmallow import (Schema, fields, pre_load, validate, validates_schema,
 from webargs.flaskparser import abort
 from webargs.flaskparser import parser as _parser
 
-from ramsis.utils.protocol import StatusCode
+from ramsis.sfm.worker.utils import StatusCode
 
 
 def validate_positive(d):

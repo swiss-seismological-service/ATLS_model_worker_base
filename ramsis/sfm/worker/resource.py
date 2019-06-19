@@ -24,13 +24,12 @@ from flask_restful import Resource
 from sqlalchemy.orm.exc import NoResultFound
 
 from ramsis.utils.error import Error
-from ramsis.utils.protocol import (StatusCode,
-                                   SFMWorkerOutputMessage,
+from ramsis.utils.protocol import (SFMWorkerOutputMessage,
                                    SFMWorkerOutputMessageSchema)
-
 from ramsis.sfm.worker import orm
-from ramsis.sfm.worker.task import Task
 from ramsis.sfm.worker.parser import parser, SFMWorkerIMessageSchema
+from ramsis.sfm.worker.task import Task
+from ramsis.sfm.worker.utils import StatusCode
 
 
 # -----------------------------------------------------------------------------

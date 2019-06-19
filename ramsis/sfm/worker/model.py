@@ -16,9 +16,9 @@ import functools
 import logging
 
 from ramsis.utils.error import Error
-from ramsis.utils.protocol import (SFMWorkerOutputMessage as ModelResult,
-                                   StatusCode)
-from ramsis.sfm.worker.utils import escape_newline, ContextLoggerAdapter
+from ramsis.utils.protocol import SFMWorkerOutputMessage as ModelResult
+from ramsis.sfm.worker.utils import (escape_newline, ContextLoggerAdapter,
+                                     StatusCode)
 from ramsis.sfm.worker.orm import Model as _Model
 
 
