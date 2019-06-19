@@ -1,13 +1,4 @@
-# This is <__init__.py>
-# -----------------------------------------------------------------------------
-#
-# Purpose: General purpose utilities.
-#
-# Copyright (c) Daniel Armbruster (SED, ETH), Lukas Heiniger (SED, ETH)
-#
-# REVISION AND CHANGES
-# 2018/04/03        V0.1    Daniel Armbruster
-# =============================================================================
+# Copyright 2019, ETH Zurich - Swiss Seismological Service SED
 """
 General purpose ramsis.sfm.workers utilities
 """
@@ -17,7 +8,6 @@ import logging
 import pkg_resources
 
 
-# -----------------------------------------------------------------------------
 def get_version(namespace_pkg_name=None):
     """
     fetch version string
@@ -34,7 +24,6 @@ def get_version(namespace_pkg_name=None):
     except Exception:
         return pkg_resources.get_distribution("ramsis.sfm.worker").version
 
-# get_version ()
 
 def escape_newline(s):
     """
@@ -44,7 +33,6 @@ def escape_newline(s):
     """
     return s.replace('\n', '\\n').replace('\r', '\\r')
 
-# escape_newline ()
 
 def url(url):
     """
@@ -54,8 +42,6 @@ def url(url):
             (url.startswith('////', 7) or url.startswith('///C:', 7))):
         raise argparse.ArgumentTypeError('SQLite URL must be absolute.')
     return url
-
-# url ()
 
 
 class ContextLoggerAdapter(logging.LoggerAdapter):
@@ -81,5 +67,3 @@ class StatusCode(enum.Enum):
     HTTPMethodNotAllowed = 405
     UnprocessableEntity = 422
     WorkerError = 500
-
-# ---- END OF <__init__.py> ----

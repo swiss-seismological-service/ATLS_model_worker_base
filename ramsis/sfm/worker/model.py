@@ -1,13 +1,4 @@
-# This is <model.py>
-# -----------------------------------------------------------------------------
-#
-# Purpose: General purposes RT-RAMSIS model facilities.
-#
-# Copyright (c) Daniel Armbruster (SED, ETH), Lukas Heiniger (SED, ETH)
-#
-# REVISION AND CHANGES
-# 2018/08/14        V0.1    Daniel Armbruster
-# =============================================================================
+# Copyright 2019, ETH Zurich - Swiss Seismological Service SED
 """
 General purposes RT-RAMSIS model facilities.
 """
@@ -25,8 +16,10 @@ from ramsis.sfm.worker.orm import Model as _Model
 class ModelError(Error):
     """Base model error ({})."""
 
+
 class InvalidConfiguration(ModelError):
     """Invalid configuration ({})."""
+
 
 # -----------------------------------------------------------------------------
 def with_exception_handling(func):
@@ -56,7 +49,6 @@ def with_exception_handling(func):
 
     return decorator
 
-# with_exception_handling ()
 
 # -----------------------------------------------------------------------------
 class Model(object):
@@ -73,8 +65,6 @@ class Model(object):
 
         self._stdout = None
         self._stderr = None
-
-    # __init__ ()
 
     @classmethod
     def orm(cls):
@@ -103,8 +93,6 @@ class Model(object):
         """
         raise NotImplementedError
 
-    # _run ()
-
     @with_exception_handling
     def __call__(self, task_id, **kwargs):
         """
@@ -117,8 +105,6 @@ class Model(object):
         """
         return self._run(task_id, **kwargs)
 
-    # __call__ ()
-
     def __getstate__(self):
         # prevent pickling errors for loggers
         d = dict(self.__dict__)
@@ -128,20 +114,11 @@ class Model(object):
             del d['logger']
         return d
 
-    # __getstate__ ()
-
     def __setstate__(self, d):
         if '_logger' in d.keys():
             d['_logger'] = logging.getLogger(d['_logger'])
             d['logger'] = ContextLoggerAdapter(d['_logger'], {'ctx': self})
             self.__dict__.update(d)
 
-    # __setstate__ ()
-
     def __repr__(self):
         return '<{}(name={})>'.format(type(self).__name__, self.NAME)
-
-# class Model
-
-
-# ---- END OF <model.py> ----

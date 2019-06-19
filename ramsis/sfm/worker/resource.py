@@ -1,13 +1,4 @@
-# This is <resource.py>
-# -----------------------------------------------------------------------------
-#
-# Purpose: SaSS worker application facilities.
-#
-# Copyright (c) Daniel Armbruster (SED, ETH), Lukas Heiniger (SED, ETH)
-#
-# REVISION AND CHANGES
-# 2018/04/10        V0.1    Daniel Armbruster
-# =============================================================================
+# Copyright 2019, ETH Zurich - Swiss Seismological Service SED
 """
 Resource facilities for worker webservices.
 """
@@ -36,8 +27,10 @@ from ramsis.sfm.worker.utils import StatusCode
 class WorkerError(Error):
     """Base worker error ({})."""
 
+
 class CannotCreateTaskModel(WorkerError):
     """Error while creating task model ({})."""
+
 
 # -----------------------------------------------------------------------------
 def make_response(msg, status_code=None,
@@ -67,14 +60,12 @@ def make_response(msg, status_code=None,
 
         resp = _make_response(serializer(**kwargs).dumps(msg), status_code)
         resp.headers['Content-Type'] = 'application/json'
-        #if msg.warning:
-        #    resp.headers['Warning'] = '299 {}'.format(msg.warning)
+        # if msg.warning:
+        #     resp.headers['Warning'] = '299 {}'.format(msg.warning)
         return resp
 
     except Exception as err:
         raise WorkerError(err)
-
-# make_response ()
 
 
 def with_validated_args(func):
@@ -96,8 +87,6 @@ def with_validated_args(func):
         return func(self, *args, **kwargs)
 
     return decorator
-
-# with_validated_args ()
 
 
 # -----------------------------------------------------------------------------
@@ -124,7 +113,6 @@ class RamsisWorkerBaseResource(Resource):
     def delete(self):
         return 'Method not allowed.', StatusCode.HTTPMethodNotAllowed.value
 
-# class RamsisWorkerBaseResource
 
 class SFMRamsisWorkerResource(RamsisWorkerBaseResource):
     """
@@ -142,7 +130,7 @@ class SFMRamsisWorkerResource(RamsisWorkerBaseResource):
         session = self._db.session
         try:
             task = session.query(orm.Task).\
-                filter(orm.Task.id==task_id).\
+                filter(orm.Task.id == task_id).\
                 one()
 
             msg = SFMWorkerOutputMessage.from_task(task)
@@ -156,8 +144,6 @@ class SFMRamsisWorkerResource(RamsisWorkerBaseResource):
 
         return make_response(msg)
 
-    # get ()
-
     @with_validated_args
     def delete(self, task_id):
         """
@@ -170,7 +156,7 @@ class SFMRamsisWorkerResource(RamsisWorkerBaseResource):
         session = self._db.session
         try:
             task = session.query(orm.Task).\
-                filter(orm.Task.id==task_id).\
+                filter(orm.Task.id == task_id).\
                 one()
 
             msg = SFMWorkerOutputMessage.from_task(task)
@@ -195,8 +181,6 @@ class SFMRamsisWorkerResource(RamsisWorkerBaseResource):
         finally:
             session.close()
 
-    # delete ()
-
     @staticmethod
     def validate_args(task_id):
         """
@@ -212,10 +196,6 @@ class SFMRamsisWorkerResource(RamsisWorkerBaseResource):
         """
         return uuid.UUID(task_id)
 
-    # validate_args ()
-
-# class SFMRamsisWorkerResource
-
 
 class SFMRamsisWorkerListResource(RamsisWorkerBaseResource):
     """
@@ -230,8 +210,6 @@ class SFMRamsisWorkerListResource(RamsisWorkerBaseResource):
         super().__init__(db=db)
 
         self._model = model
-
-    # __init__ ()
 
     @classmethod
     def _pool(cls):
@@ -269,8 +247,6 @@ class SFMRamsisWorkerListResource(RamsisWorkerBaseResource):
         finally:
             session.close()
 
-    # get ()
-
     def post(self):
         """
         Implementation of HTTP :code:`POST` method. Maps a task to the worker
@@ -291,8 +267,8 @@ class SFMRamsisWorkerListResource(RamsisWorkerBaseResource):
             m_model = self._model.orm()
             existing_m_model = \
                 session.query(orm.Model).\
-                filter(orm.Model.name==m_model.name).\
-                filter(orm.Model.description==m_model.description).\
+                filter(orm.Model.name == m_model.name).\
+                filter(orm.Model.description == m_model.description).\
                 one_or_none()
 
             if existing_m_model:
@@ -328,8 +304,6 @@ class SFMRamsisWorkerListResource(RamsisWorkerBaseResource):
 
         return make_response(msg)
 
-    # post ()
-
     def _parse(self, request, locations=('json',)):
         """
         Parse the arguments for a model run. Since :code:`model_parameters` are
@@ -346,10 +320,3 @@ class SFMRamsisWorkerListResource(RamsisWorkerBaseResource):
         """
         return parser.parse(SFMWorkerIMessageSchema(), request,
                             locations=locations)
-
-    # _parse ()
-
-# class SFMRamsisWorkerListResource
-
-
-# ---- END OF <resource.py> ----

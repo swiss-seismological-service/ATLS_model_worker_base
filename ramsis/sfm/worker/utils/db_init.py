@@ -1,11 +1,4 @@
-# This is <db_init.py>
-# -----------------------------------------------------------------------------
-#
-# Copyright (c) Daniel Armbruster (SED, ETH), Lukas Heiniger (SED, ETH)
-#
-# REVISION AND CHANGES
-# 2018/08/17    V0.1    Daniel Armbruster
-# =============================================================================
+# Copyright 2019, ETH Zurich - Swiss Seismological Service SED
 """
 Initialize a RT-RAMSIS worker DB.
 """
@@ -55,8 +48,6 @@ class DBInitApp(App):
 
         return parser
 
-    # build_parser ()
-
     def run(self):
         """
         Run application.
@@ -90,10 +81,6 @@ class DBInitApp(App):
 
         sys.exit(exit_code.value)
 
-    # run ()
-
-# class DBInit
-
 
 # ----------------------------------------------------------------------------
 def main():
@@ -116,11 +103,7 @@ def main():
 
     return app.run()
 
-# main ()
-
 
 # -----------------------------------------------------------------------------
 if __name__ == '__main__':
     main()
-
-# ---- END OF <db_init.py> ----

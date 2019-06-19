@@ -1,15 +1,6 @@
-# This is <parser.py>
-# -----------------------------------------------------------------------------
-#
-# Purpose: SaSS worker parser facilities.
-#
-# Copyright (c) Daniel Armbruster (SED, ETH), Lukas Heiniger (SED, ETH)
-#
-# REVISION AND CHANGES
-# 2018/04/16        V0.1    Daniel Armbruster
-# =============================================================================
+# Copyright 2019, ETH Zurich - Swiss Seismological Service SED
 """
-Error handling facilities for worker webservices.
+Parsing facilities for worker webservices.
 """
 
 import base64
@@ -208,7 +199,6 @@ class SFMWorkerIMessageSchema(SchemaBase):
     model_parameters = fields.Dict(keys=fields.Str())
 
 
-# This error handler is necessary for usage with Flask-RESTful
 @_parser.error_handler
 def handle_request_parsing_error(err, req, schema):
     """
@@ -218,11 +208,5 @@ def handle_request_parsing_error(err, req, schema):
     abort(StatusCode.UnprocessableEntity.value,
           errors=err.messages)
 
-# handle_request_parsing_error ()
-
 
 parser = _parser
-
-# parser_factory ()
-
-# ---- END OF <parser.py> ----

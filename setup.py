@@ -1,15 +1,4 @@
-# This is <setup.py>
-# ----------------------------------------------------------------------------
-#
-# Copyright (c) 2018 by Daniel Armbruster (SED, ETHZ),
-#                       Lukas Heiniger (SED, ETHZ)
-#
-# setup.py (ramsis.sfm.worker)
-#
-# REVISIONS and CHANGES
-# 2018/04/03    V1.0   Daniel Armbruster
-#
-# ============================================================================
+# Copyright 2019, ETH Zurich - Swiss Seismological Service SED
 """
 setup.py for ramsis.sfm.worker
 
@@ -33,8 +22,6 @@ def get_version(filename):
     with open(filename) as f:
         metadata = dict(findall("__([a-z]+)__ = '([^']+)'", f.read()))
     return metadata['version']
-
-# get_version ()
 
 
 _authors = [
@@ -118,5 +105,3 @@ setup(
     entry_points=_entry_points
     # TODO(damb): test_suite=unittest.TestCase
 )
-
-# ----- END OF setup.py -----
