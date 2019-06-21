@@ -11,7 +11,7 @@ from osgeo import ogr
 from sqlalchemy import Column, Integer, Float, String, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declared_attr, declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 from sqlalchemy.types import TypeDecorator, CHAR
 
 from ramsis.sfm.worker.utils import StatusCode
@@ -123,6 +123,40 @@ class Model(ORMBase):
         return "<{}(name={})>".format(type(self).__name__, self.name)
 
 
+class RealQuantity(ORMBase):
+    """
+    ORM mapping representing a :py:code:`QuakeMLRealQuantity`.
+    """
+    value = Column(Float, nullable=False)
+    uncertainty = Column(Float)
+    loweruncertainty = Column(Float)
+    upperuncertainty = Column(Float)
+    confidencelevel = Column(Float)
+
+
+class ModelResultSample(ORMBase):
+    """
+    ORM mapping representing a single sample of a model result.
+    """
+    starttime = Column(DateTime)
+    endtime = Column(DateTime)
+    rate_id = Column(Integer, ForeignKey('realquantity.oid'))
+    rate = relationship('ramsis.sfm.worker.orm.RealQuantity',
+                        backref=backref('_modelresultsample_rate',
+                                        uselist=False),
+                        foreign_keys=[rate_id])
+
+    b_id = Column(Integer, ForeignKey('realquantity.oid'))
+    b = relationship('ramsis.sfm.worker.orm.RealQuantity',
+                     backref=backref('_modelresultsample_b',
+                                     uselist=False),
+                     foreign_keys=[b_id])
+
+    reservoir_id = Column(Integer, ForeignKey('reservoir.oid'))
+    reservoir = relationship('ramsis.sfm.worker.orm.Reservoir',
+                             back_populates='samples')
+
+
 class Reservoir(LastSeenMixin, ORMBase):
     """
     RAMSIS worker reservoir geometry ORM mapping.
@@ -131,9 +165,8 @@ class Reservoir(LastSeenMixin, ORMBase):
     geom = Column(Geometry(geometry_type='GEOMETRYZ', dimension=3),
                   nullable=False)
 
-    event_rate = Column(Float)
-    b_value = Column(Float)
-    rate_probability = Column(Float)
+    samples = relationship('ramsis.sfm.worker.orm.ModelResultSample',
+                           back_populates='reservoir')
 
     sub_geometries = relationship('ramsis.sfm.worker.orm.Reservoir')
 

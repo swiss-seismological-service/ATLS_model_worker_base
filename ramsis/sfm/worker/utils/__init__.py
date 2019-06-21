@@ -4,10 +4,11 @@ General purpose ramsis.sfm.workers utilities
 """
 import argparse
 import enum
+import functools
 import logging
 import pkg_resources
 
-from marshmallow import Schema, fields, post_dump
+from marshmallow import Schema, fields, post_dump, validate
 
 
 def get_version(namespace_pkg_name=None):
@@ -72,10 +73,63 @@ class StatusCode(enum.Enum):
     WorkerError = 500
 
 
+def validate_positive(d):
+    return d >= 0
+
+
+validate_percentage = validate.Range(min=0, max=100)
+validate_longitude = validate.Range(min=-180., max=180.)
+validate_latitude = validate.Range(min=-90., max=90)
+validate_ph = validate.Range(min=0, max=14)
+
+Positive = functools.partial(fields.Float, validate=validate_positive)
+Percentage = functools.partial(fields.Float, validate=validate_percentage)
+
+
 class SchemaBase(Schema):
+
+    @classmethod
+    def _clear_missing(cls, data):
+        retval = data.copy()
+        for key in filter(lambda key: data[key] is None, data):
+            del retval[key]
+        return retval
 
     class Meta:
         strict = True
+
+
+class QuakeMLQuantitySchemaBase(SchemaBase):
+    uncertainty = Positive()
+    loweruncertainty = Positive()
+    upperuncertainty = Positive()
+    confidencelevel = Percentage()
+
+
+def QuakeMLRealQuantitySchema(validate=None):
+    """
+    Factory function for a `QuakeML <https://quake.ethz.ch/quakeml/>`_
+    RealQuantity type.
+    """
+
+    class _QuakeMLRealQuantitySchema(QuakeMLQuantitySchemaBase):
+        value = fields.Float(validate=validate)
+
+        @post_dump
+        def clear_missing(self, data):
+            return self._clear_missing(data)
+
+    return _QuakeMLRealQuantitySchema
+
+
+class ModelResultSampleSchema(SchemaBase):
+    """
+    Schema representation for a model result sample.
+    """
+    starttime = fields.DateTime(format='iso')
+    endtime = fields.DateTime(format='iso')
+    erate = fields.Nested(QuakeMLRealQuantitySchema())
+    b = fields.Nested(QuakeMLRealQuantitySchema())
 
 
 class ReservoirSchema(SchemaBase):
@@ -84,11 +138,7 @@ class ReservoirSchema(SchemaBase):
     """
     # XXX(damb): WKT/WKB
     geom = fields.String()
-
-    event_rate = fields.Float()
-    b_value = fields.Float()
-    std_event_rate = fields.Float()
-
+    samples = fields.Nested(ModelResultSampleSchema, many=True)
     sub_geometries = fields.Nested('self', many=True)
 
     @post_dump(pass_original=True)
