@@ -10,8 +10,8 @@ from sqlalchemy import create_engine
 
 from ramsis.utils.app import CustomParser, App, AppError
 from ramsis.utils.error import Error, ExitCode
-from ramsis.sfm.worker import settings
-from ramsis.sfm.worker.utils import url, orm
+from ramsis.sfm.worker import settings, orm
+from ramsis.sfm.worker.utils import url
 
 __version__ = '0.1'
 
