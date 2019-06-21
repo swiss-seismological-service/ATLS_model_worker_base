@@ -6,12 +6,12 @@ Parsing facilities for worker webservices.
 import base64
 import functools
 
-from marshmallow import (Schema, fields, pre_load, validate, validates_schema,
+from marshmallow import (fields, pre_load, validate, validates_schema,
                          ValidationError)
 from webargs.flaskparser import abort
 from webargs.flaskparser import parser as _parser
 
-from ramsis.sfm.worker.utils import StatusCode
+from ramsis.sfm.worker.utils import StatusCode, SchemaBase
 
 
 def validate_positive(d):
@@ -25,12 +25,6 @@ validate_ph = validate.Range(min=0, max=14)
 
 Positive = functools.partial(fields.Float, validate=validate_positive)
 Percentage = functools.partial(fields.Float, validate=validate_percentage)
-
-
-class SchemaBase(Schema):
-
-    class Meta:
-        strict = True
 
 
 class QuakeMLQuantitySchemaBase(SchemaBase):
