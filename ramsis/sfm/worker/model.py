@@ -6,8 +6,9 @@ General purposes RT-RAMSIS model facilities.
 import functools
 import logging
 
+from collections import namedtuple
+
 from ramsis.utils.error import Error
-from ramsis.utils.protocol import SFMWorkerOutputMessage as ModelResult
 from ramsis.sfm.worker.utils import (escape_newline, ContextLoggerAdapter,
                                      StatusCode)
 from ramsis.sfm.worker.orm import Model as _Model
@@ -48,6 +49,49 @@ def with_exception_handling(func):
                 warning='Caught in default model exception handler.')
 
     return decorator
+
+
+# -----------------------------------------------------------------------------
+class ModelResult(namedtuple('ModelResult',
+                             ['status',
+                              'status_code',
+                              'data',
+                              'length',
+                              'warning'])):
+
+    @classmethod
+    def error(cls, status, status_code, data={}, warning=''):
+        return cls(status=status, status_code=status_code, data=data,
+                   length=len(data), warning=warning)
+
+    @classmethod
+    def ok(cls, data, warning=''):
+        return cls(status=StatusCode.TaskCompleted.name,
+                   status_code=StatusCode.TaskCompleted.value,
+                   data=data, length=len(data), warning=warning)
+
+    @classmethod
+    def accepted(cls, task_id):
+        data = {str(task_id): {}}
+        return cls(status=StatusCode.TaskAccepted.name,
+                   status_code=StatusCode.TaskAccepted.value,
+                   data=data, length=len(data), warning='')
+
+    @classmethod
+    def no_content(cls, task_id):
+        return cls(status=StatusCode.TaskNotAvailable.name,
+                   status_code=StatusCode.TaskNotAvailable.value,
+                   data={}, length=0,
+                   warning='No such task: (id={})'.format(task_id))
+
+    @classmethod
+    def from_task(cls, task):
+        data = {str(task.id): (task.result if task.status_code == 200 else
+                               task.status)}
+        return cls(status=task.status,
+                   status_code=task.status_code,
+                   data=data, length=len(data),
+                   warning=task.warning)
 
 
 # -----------------------------------------------------------------------------

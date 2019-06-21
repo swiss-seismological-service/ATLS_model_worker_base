@@ -14,13 +14,12 @@ from flask import make_response as _make_response
 from flask_restful import Resource
 from sqlalchemy.orm.exc import NoResultFound
 
-from ramsis.utils.error import Error
-from ramsis.utils.protocol import (SFMWorkerOutputMessage,
-                                   SFMWorkerOutputMessageSchema)
 from ramsis.sfm.worker import orm
+from ramsis.sfm.worker.model import ModelResult
 from ramsis.sfm.worker.parser import parser, SFMWorkerIMessageSchema
 from ramsis.sfm.worker.task import Task
-from ramsis.sfm.worker.utils import StatusCode
+from ramsis.sfm.worker.utils import StatusCode, SFMWorkerOMessageSchema
+from ramsis.utils.error import Error
 
 
 # -----------------------------------------------------------------------------
@@ -34,12 +33,12 @@ class CannotCreateTaskModel(WorkerError):
 
 # -----------------------------------------------------------------------------
 def make_response(msg, status_code=None,
-                  serializer=SFMWorkerOutputMessageSchema, **kwargs):
+                  serializer=SFMWorkerOMessageSchema, **kwargs):
     """
     Factory function creating :py:class:`flask.Flask.response_class.
 
     :param msg: Serialized message the response is created from
-    :type msg: :py:class:`ramsis.utils.protocol.SFMWorkerOutputMessage`
+    :type msg: :py:class:`ramsis.sfm.worker.model.ModelResult`
     :param status_code: Force HTTP status code. If :code:`None` the status code
         is extracted from :code:`msg`
     :type status_code: int or None
@@ -79,7 +78,7 @@ def with_validated_args(func):
         except ValueError as err:
             self.logger.warning('Invalid argument: {}.'.format(err))
 
-            msg = SFMWorkerOutputMessage.no_content(kwargs.get('task_id'))
+            msg = ModelResult.no_content(kwargs.get('task_id'))
             self.logger.debug('Response msg: {}'.format(msg))
 
             return make_response(msg)
@@ -133,7 +132,7 @@ class SFMRamsisWorkerResource(RamsisWorkerBaseResource):
                 filter(orm.Task.id == task_id).\
                 one()
 
-            msg = SFMWorkerOutputMessage.from_task(task)
+            msg = ModelResult.from_task(task)
             self.logger.debug('Response msg: {}'.format(msg))
 
         except Exception as err:
@@ -159,7 +158,7 @@ class SFMRamsisWorkerResource(RamsisWorkerBaseResource):
                 filter(orm.Task.id == task_id).\
                 one()
 
-            msg = SFMWorkerOutputMessage.from_task(task)
+            msg = ModelResult.from_task(task)
             self.logger.debug('Response msg: {}'.format(msg))
 
             session.delete(task)
@@ -171,7 +170,7 @@ class SFMRamsisWorkerResource(RamsisWorkerBaseResource):
             self.logger.warning(
                 'No matching task found (id={}).'.format(task_id))
 
-            msg = SFMWorkerOutputMessage.no_content(task_id)
+            msg = ModelResult.no_content(task_id)
             self.logger.debug('Response msg: {}'.format(msg))
             return make_response(msg)
 
@@ -235,10 +234,10 @@ class SFMRamsisWorkerListResource(RamsisWorkerBaseResource):
             tasks = session.query(orm.Task).\
                 all()
 
-            msgs = [SFMWorkerOutputMessage.from_task(t) for t in tasks]
+            msgs = [ModelResult.from_task(t) for t in tasks]
             self.logger.debug('Response msgs: {}'.format(msgs))
 
-            return make_response(msgs, serializer=SFMWorkerOutputMessageSchema,
+            return make_response(msgs, serializer=SFMWorkerOMessageSchema,
                                  many=True)
 
         except Exception as err:
@@ -299,7 +298,7 @@ class SFMRamsisWorkerListResource(RamsisWorkerBaseResource):
 
         _ = self._pool().apply_async(t) # noqa
 
-        msg = SFMWorkerOutputMessage.accepted(task_id)
+        msg = ModelResult.accepted(task_id)
         self.logger.debug('Task ({}) accepted.'.format(task_id))
 
         return make_response(msg)

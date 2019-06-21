@@ -7,6 +7,8 @@ import enum
 import logging
 import pkg_resources
 
+from marshmallow import Schema, fields, post_dump
+
 
 def get_version(namespace_pkg_name=None):
     """
@@ -53,6 +55,7 @@ class ContextLoggerAdapter(logging.LoggerAdapter):
         return '[%s] %s' % (self.extra['ctx'], msg), kwargs
 
 
+# -----------------------------------------------------------------------------
 class StatusCode(enum.Enum):
     """
     SFM-Worker status code enum.
@@ -67,3 +70,46 @@ class StatusCode(enum.Enum):
     HTTPMethodNotAllowed = 405
     UnprocessableEntity = 422
     WorkerError = 500
+
+
+class SchemaBase(Schema):
+
+    class Meta:
+        strict = True
+
+
+class ReservoirSchema(SchemaBase):
+    # XXX(damb): WKT/WKB
+    geom = fields.String()
+
+    event_rate = fields.Float()
+    b_value = fields.Float()
+    std_event_rate = fields.Float()
+
+    sub_geometries = fields.Nested('self', many=True)
+
+    @post_dump(pass_original=True)
+    def geom_as_wkt(self, data, orig):
+        """
+        Use the :code:`WKT` representation of the reservoir geometry instead of
+        :code:`WKB`.
+        """
+        try:
+            data['geom'] = orig.wkt()
+        except AttributeError:
+            pass
+
+        return data
+
+
+class SFMWorkerOMessageSchema(SchemaBase):
+    """
+    Schema implementation for de-/serializing
+    :py:class:`ramsis.sfm.worker.model.ModelResult`.
+    """
+    status = fields.Str()
+    status_code = fields.Int()
+    data = fields.Dict(keys=fields.UUID(),
+                       values=fields.Nested(ReservoirSchema))
+    length = fields.Int()
+    warning = fields.Str()
