@@ -79,6 +79,9 @@ class SchemaBase(Schema):
 
 
 class ReservoirSchema(SchemaBase):
+    """
+    Schema representation for a reservoir.
+    """
     # XXX(damb): WKT/WKB
     geom = fields.String()
 
