@@ -9,9 +9,9 @@ import logging
 from collections import namedtuple
 
 from ramsis.utils.error import Error
+from ramsis.sfm.worker.orm import Model as _Model
 from ramsis.sfm.worker.utils import (escape_newline, ContextLoggerAdapter,
                                      StatusCode)
-from ramsis.sfm.worker.orm import Model as _Model
 
 
 class ModelError(Error):
