@@ -187,4 +187,4 @@ class Task(object):
             session.close()
 
     def __repr__(self):
-        return '<{}(id={})'.format(type(self).__name__, self.id)
+        return '<{}(id={})>'.format(type(self).__name__, self.id)
