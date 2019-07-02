@@ -196,126 +196,142 @@ class SFMRamsisWorkerResource(RamsisWorkerBaseResource):
         return uuid.UUID(task_id)
 
 
-class SFMRamsisWorkerListResource(RamsisWorkerBaseResource):
+def create_sfmramsisworkerlistresource(processes=5):
     """
-    Implementation of a *stateless* *RT-RAMSIS* seismicity forecast model (SFM)
-    worker resource. The resource ships a pool of worker processes.
+    Factory method allowing the creation of a
+    :py:class`SFMRamsisWorkerListResource`.
 
-    By default model results are written to a DB.
+    :param int processes: Number of workers to the resource's pool.
+
+    :returns: Configured list resource
+    :retval: :py:class`SFMRamsisWorkerListResource`
     """
-    POOL = Pool(processes=5)
 
-    def __init__(self, model, db):
-        super().__init__(db=db)
+    if processes < 1:
+        raise ValueError('Invalid number of processes assigned.')
 
-        self._model = model
-
-    @classmethod
-    def _pool(cls):
-        if cls.POOL is None:
-            raise WorkerError('POOL undefined.')
-        return cls.POOL
-
-    @property
-    def request_id(self):
-        if getattr(g, 'request_id', None):
-            return g.request_id
-        raise KeyError("Missing key 'request_id' in application context.")
-
-    def get(self):
+    class SFMRamsisWorkerListResource(RamsisWorkerBaseResource):
         """
-        Implementation of HTTP :code:`GET` method. Returns all available
-        tasks.
+        Implementation of a *stateless* *RT-RAMSIS* seismicity forecast model (SFM)
+        worker resource. The resource ships a pool of worker processes.
+
+        By default model results are written to a DB.
         """
-        self.logger.debug('Received HTTP GET request.')
+        POOL = Pool(processes=processes)
 
-        session = self._db.session
-        try:
-            tasks = session.query(orm.Task).\
-                all()
+        def __init__(self, model, db):
+            super().__init__(db=db)
 
-            msgs = [ModelResult.from_task(t) for t in tasks]
-            self.logger.debug('Response msgs: {}'.format(msgs))
+            self._model = model
 
-            return make_response(msgs, serializer=SFMWorkerOMessageSchema,
-                                 many=True)
+        @classmethod
+        def _pool(cls):
+            if cls.POOL is None:
+                raise WorkerError('POOL undefined.')
+            return cls.POOL
 
-        except Exception as err:
-            session.rollback()
-            raise err
-        finally:
-            session.close()
+        @property
+        def request_id(self):
+            if getattr(g, 'request_id', None):
+                return g.request_id
+            raise KeyError("Missing key 'request_id' in application context.")
 
-    def post(self):
-        """
-        Implementation of HTTP :code:`POST` method. Maps a task to the worker
-        pool.
-        """
-        self.logger.debug(
-            'Received HTTP POST request (Model: {!r}, task_id: {}).'.format(
-                self._model, self.request_id))
+        def get(self):
+            """
+            Implementation of HTTP :code:`GET` method. Returns all available
+            tasks.
+            """
+            self.logger.debug('Received HTTP GET request.')
 
-        # parse arguments
-        args = self._parse(request, locations=('json',))
+            session = self._db.session
+            try:
+                tasks = session.query(orm.Task).\
+                    all()
 
-        task_id = self.request_id
-        # XXX(damb): register a new orm.Task at DB
-        session = self._db.session
-        try:
-            # XXX(damb): create a new orm.Model if not existant
-            m_model = self._model.orm()
-            existing_m_model = \
-                session.query(orm.Model).\
-                filter(orm.Model.name == m_model.name).\
-                filter(orm.Model.description == m_model.description).\
-                one_or_none()
+                msgs = [ModelResult.from_task(t) for t in tasks]
+                self.logger.debug('Response msgs: {}'.format(msgs))
 
-            if existing_m_model:
-                m_model = existing_m_model
+                return make_response(msgs, serializer=SFMWorkerOMessageSchema,
+                                     many=True)
 
-            m_task = orm.Task.new(id=task_id, model=m_model)
+            except Exception as err:
+                session.rollback()
+                raise err
+            finally:
+                session.close()
 
-            session.add(m_task)
-            session.commit()
+        def post(self):
+            """
+            Implementation of HTTP :code:`POST` method. Maps a task to the worker
+            pool.
+            """
+            self.logger.debug(
+                'Received HTTP POST request (Model: {!r}, task_id: {}).'.format(
+                    self._model, self.request_id))
+
+            # parse arguments
+            args = self._parse(request, locations=('json',))
+
+            task_id = self.request_id
+            # XXX(damb): register a new orm.Task at DB
+            session = self._db.session
+            try:
+                # XXX(damb): create a new orm.Model if not existant
+                m_model = self._model.orm()
+                existing_m_model = \
+                    session.query(orm.Model).\
+                    filter(orm.Model.name == m_model.name).\
+                    filter(orm.Model.description == m_model.description).\
+                    one_or_none()
+
+                if existing_m_model:
+                    m_model = existing_m_model
+
+                m_task = orm.Task.new(id=task_id, model=m_model)
+
+                session.add(m_task)
+                session.commit()
+
+                self.logger.debug(
+                    '{!r}: {!r} successfully created.'.format(self, m_task))
+            except Exception as err:
+                session.rollback()
+                raise CannotCreateTaskModel(err)
+            finally:
+                session.close()
 
             self.logger.debug(
-                '{!r}: {!r} successfully created.'.format(self, m_task))
-        except Exception as err:
-            session.rollback()
-            raise CannotCreateTaskModel(err)
-        finally:
-            session.close()
+                'Executing {!r} task ({}) with parameters {!r} ...'.format(
+                    self._model, task_id, args))
 
-        self.logger.debug(
-            'Executing {!r} task ({}) with parameters {!r} ...'.format(
-                self._model, task_id, args))
+            # create a task; inject model_default parameters
+            t = Task(
+                model=self._model(**current_app.config['RAMSIS_SFM_DEFAULTS']),
+                task_id=task_id,
+                db_url=current_app.config['SQLALCHEMY_DATABASE_URI'], **args)
 
-        # create a task; inject model_default parameters
-        t = Task(
-            model=self._model(**current_app.config['RAMSIS_SFM_DEFAULTS']),
-            task_id=task_id,
-            db_url=current_app.config['SQLALCHEMY_DATABASE_URI'], **args)
+            _ = self._pool().apply_async(t) # noqa
 
-        _ = self._pool().apply_async(t) # noqa
+            msg = ModelResult.accepted(task_id)
+            self.logger.debug('Task ({}) accepted.'.format(task_id))
 
-        msg = ModelResult.accepted(task_id)
-        self.logger.debug('Task ({}) accepted.'.format(task_id))
+            return make_response(msg)
 
-        return make_response(msg)
+        def _parse(self, request, locations=('json',)):
+            """
+            Parse the arguments for a model run. Since :code:`model_parameters` are
+            implemented as a simple :py:class:`marshmallow.fields.Dict` i.e.
 
-    def _parse(self, request, locations=('json',)):
-        """
-        Parse the arguments for a model run. Since :code:`model_parameters` are
-        implemented as a simple :py:class:`marshmallow.fields.Dict` i.e.
+            .. code::
 
-        .. code::
+                model_parameters =
+                    marshmallow.fields.Dict(keys=marshmallow.fields.Str())
 
-            model_parameters =
-                marshmallow.fields.Dict(keys=marshmallow.fields.Str())
+            by default no validation is performed on model parameters. However,
+            overloading this template function and using a model specific schema
+            allows the validation of the :code:`model_parameters` property.
+            """
+            return parser.parse(SFMWorkerIMessageSchema(), request,
+                                locations=locations)
 
-        by default no validation is performed on model parameters. However,
-        overloading this template function and using a model specific schema
-        allows the validation of the :code:`model_parameters` property.
-        """
-        return parser.parse(SFMWorkerIMessageSchema(), request,
-                            locations=locations)
+    return SFMRamsisWorkerListResource
