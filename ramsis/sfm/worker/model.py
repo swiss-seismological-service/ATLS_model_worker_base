@@ -116,11 +116,11 @@ class Model(object):
 
     @property
     def stdout(self):
-        return str(self._stdout)
+        return self._stdout
 
     @property
     def stderr(self):
-        return str(self._stderr)
+        return self._stderr
 
     def _run(self, task_id, **kwargs):
         """
