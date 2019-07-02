@@ -128,7 +128,7 @@ class ModelResultSampleSchema(SchemaBase):
     """
     starttime = fields.DateTime(format='iso')
     endtime = fields.DateTime(format='iso')
-    erate = fields.Nested(QuakeMLRealQuantitySchema())
+    rate = fields.Nested(QuakeMLRealQuantitySchema())
     b = fields.Nested(QuakeMLRealQuantitySchema())
 
 
