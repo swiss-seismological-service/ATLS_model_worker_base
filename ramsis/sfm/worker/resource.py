@@ -124,7 +124,7 @@ class SFMRamsisWorkerResource(RamsisWorkerBaseResource):
         Implementation of HTTP :code:`GET` method. Returns a specific task.
         """
         self.logger.debug(
-            'Received HTTP GET request (task_id: {}).'.format(task_id))
+            f"Received HTTP GET request (task_id: {task_id}).")
 
         session = self._db.session
         try:
@@ -133,7 +133,7 @@ class SFMRamsisWorkerResource(RamsisWorkerBaseResource):
                 one()
 
             msg = ModelResult.from_task(task)
-            self.logger.debug('Response msg: {}'.format(msg))
+            self.logger.debug(f"Response msg: {msg}")
 
         except Exception as err:
             session.rollback()
@@ -149,7 +149,7 @@ class SFMRamsisWorkerResource(RamsisWorkerBaseResource):
         Implementation of HTTP :code:`DELETE` method. Removes a specific task.
         """
         self.logger.debug(
-            'Received HTTP DELETE request (task_id: {}).'.format(task_id))
+            f"Received HTTP DELETE request (task_id: {task_id}).")
 
         # TODO(damb): To be checked if the task is currently processing.
         session = self._db.session
@@ -159,7 +159,7 @@ class SFMRamsisWorkerResource(RamsisWorkerBaseResource):
                 one()
 
             msg = ModelResult.from_task(task)
-            self.logger.debug('Response msg: {}'.format(msg))
+            self.logger.debug(f"Response msg: {msg}")
 
             session.delete(task)
             session.commit()
@@ -168,10 +168,10 @@ class SFMRamsisWorkerResource(RamsisWorkerBaseResource):
 
         except NoResultFound:
             self.logger.warning(
-                'No matching task found (id={}).'.format(task_id))
+                f"No matching task found (id={task_id})")
 
             msg = ModelResult.no_content(task_id)
-            self.logger.debug('Response msg: {}'.format(msg))
+            self.logger.debug(f"Response msg: {msg}")
             return make_response(msg)
 
         except Exception as err:
@@ -212,8 +212,8 @@ def create_sfmramsisworkerlistresource(processes=5):
 
     class SFMRamsisWorkerListResource(RamsisWorkerBaseResource):
         """
-        Implementation of a *stateless* *RT-RAMSIS* seismicity forecast model (SFM)
-        worker resource. The resource ships a pool of worker processes.
+        Implementation of a *stateless* *RT-RAMSIS* seismicity forecast model
+        (SFM) worker resource. The resource ships a pool of worker processes.
 
         By default model results are written to a DB.
         """
@@ -249,7 +249,7 @@ def create_sfmramsisworkerlistresource(processes=5):
                     all()
 
                 msgs = [ModelResult.from_task(t) for t in tasks]
-                self.logger.debug('Response msgs: {}'.format(msgs))
+                self.logger.debug(f"Response msgs: {msgs}")
 
                 return make_response(msgs, serializer=SFMWorkerOMessageSchema,
                                      many=True)
@@ -262,12 +262,12 @@ def create_sfmramsisworkerlistresource(processes=5):
 
         def post(self):
             """
-            Implementation of HTTP :code:`POST` method. Maps a task to the worker
-            pool.
+            Implementation of HTTP :code:`POST` method. Maps a task to the
+            worker pool.
             """
             self.logger.debug(
-                'Received HTTP POST request (Model: {!r}, task_id: {}).'.format(
-                    self._model, self.request_id))
+                f"Received HTTP POST request (Model: {self._model!r}, "
+                f"task_id: {self.request_id})")
 
             # parse arguments
             args = self._parse(request, locations=('json',))
@@ -293,7 +293,7 @@ def create_sfmramsisworkerlistresource(processes=5):
                 session.commit()
 
                 self.logger.debug(
-                    '{!r}: {!r} successfully created.'.format(self, m_task))
+                    f"{self!r}: {m_task!r} successfully created.")
             except Exception as err:
                 session.rollback()
                 raise CannotCreateTaskModel(err)
@@ -301,8 +301,8 @@ def create_sfmramsisworkerlistresource(processes=5):
                 session.close()
 
             self.logger.debug(
-                'Executing {!r} task ({}) with parameters {!r} ...'.format(
-                    self._model, task_id, args))
+                f"Executing {self._model!r} task ({task_id}) "
+                f"with parameters {args!r} ...")
 
             # create a task; inject model_default parameters
             t = Task(
@@ -319,8 +319,9 @@ def create_sfmramsisworkerlistresource(processes=5):
 
         def _parse(self, request, locations=('json',)):
             """
-            Parse the arguments for a model run. Since :code:`model_parameters` are
-            implemented as a simple :py:class:`marshmallow.fields.Dict` i.e.
+            Parse the arguments for a model run. Since :code:`model_parameters`
+            are implemented as a simple :py:class:`marshmallow.fields.Dict`
+            i.e.
 
             .. code::
 
@@ -328,8 +329,9 @@ def create_sfmramsisworkerlistresource(processes=5):
                     marshmallow.fields.Dict(keys=marshmallow.fields.Str())
 
             by default no validation is performed on model parameters. However,
-            overloading this template function and using a model specific schema
-            allows the validation of the :code:`model_parameters` property.
+            overloading this template function and using a model specific
+            schema allows the validation of the :code:`model_parameters`
+            property.
             """
             return parser.parse(SFMWorkerIMessageSchema(), request,
                                 locations=locations)
