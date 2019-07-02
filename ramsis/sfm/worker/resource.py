@@ -135,13 +135,13 @@ class SFMRamsisWorkerResource(RamsisWorkerBaseResource):
             msg = ModelResult.from_task(task)
             self.logger.debug(f"Response msg: {msg}")
 
+            return make_response(msg)
+
         except Exception as err:
             session.rollback()
             raise err
         finally:
             session.close()
-
-        return make_response(msg)
 
     @with_validated_args
     def delete(self, task_id):
