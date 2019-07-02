@@ -9,9 +9,9 @@ import logging
 from collections import namedtuple
 
 from ramsis.utils.error import Error
+from ramsis.sfm.worker.orm import Model as _Model
 from ramsis.sfm.worker.utils import (escape_newline, ContextLoggerAdapter,
                                      StatusCode)
-from ramsis.sfm.worker.orm import Model as _Model
 
 
 class ModelError(Error):
@@ -116,11 +116,11 @@ class Model(object):
 
     @property
     def stdout(self):
-        return str(self._stdout)
+        return self._stdout
 
     @property
     def stderr(self):
-        return str(self._stderr)
+        return self._stderr
 
     def _run(self, task_id, **kwargs):
         """

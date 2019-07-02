@@ -12,7 +12,8 @@ from sqlalchemy.orm import sessionmaker
 
 from ramsis.utils.error import ErrorWithTraceback
 from ramsis.sfm.worker import orm
-from ramsis.sfm.worker.utils import escape_newline, StatusCode
+from ramsis.sfm.worker.utils import (escape_newline, ContextLoggerAdapter,
+                                     StatusCode)
 
 
 # -----------------------------------------------------------------------------
@@ -48,25 +49,23 @@ def with_logging(func):
     """
     Method decorator logging the :py:class:`Model`'s state.
     """
-    # TODO(damb): Avoid repeating string content.
     @functools.wraps(func)
     def decorator(self, *args, **kwargs):
 
         _model = self._model
-        self.logger.debug('{!r}: Executing {!r} (args={}, kwargs={})'.format(
-            self, _model, self._task_id, kwargs))
+        self.logger.debug(
+            f"Executing {_model} "
+            f"(args={self._task_id}, kwargs={kwargs}) ...")
         retval = func(self, *args, **kwargs)
         self.logger.debug(
-            '{!r}: {!r} execution finished (result={})).'.format(
-                self, _model, retval))
+            f"{_model!r} execution finished (result={retval})).")
 
         if _model.stdout:
-            self.logger.info(escape_newline('{!r}: STDOUT ({!r}): {}'.format(
-                self, _model, _model.stdout)))
+            self.logger.info(escape_newline(
+                f"STDOUT {_model!r}: {_model.stdout}"))
         if _model.stderr:
-            self.logger.warning(
-                escape_newline('{!r}: STDERR ({}): {}'.format(
-                    self, _model, _model.stderr)))
+            self.logger.warning(escape_newline(
+                f"STDERR {_model!r}: {_model.stderr}"))
 
         return retval
 
@@ -97,7 +96,8 @@ class Task(object):
     LOGGER = 'ramsis.sfm.worker.task'
 
     def __init__(self, model, db_url, task_id=None, **kwargs):
-        self.logger = logging.getLogger(self.LOGGER)
+        self._logger = logging.getLogger(self.LOGGER)
+        self.logger = ContextLoggerAdapter(self._logger, {'ctx': self})
 
         self._model = model
         self._db_url = db_url
@@ -111,13 +111,16 @@ class Task(object):
     def __getstate__(self):
         # prevent pickling errors for loggers
         d = dict(self.__dict__)
+        if '_logger' in d.keys():
+            d['_logger'] = d['_logger'].name
         if 'logger' in d.keys():
-            d['logger'] = d['logger'].name
+            del d['logger']
         return d
 
     def __setstate__(self, d):
-        if 'logger' in d.keys():
-            d['logger'] = logging.getLogger(d['logger'])
+        if '_logger' in d.keys():
+            d['_logger'] = logging.getLogger(d['_logger'])
+            d['logger'] = ContextLoggerAdapter(d['_logger'], {'ctx': self})
             self.__dict__.update(d)
 
     @with_logging
@@ -160,8 +163,7 @@ class Task(object):
         session = create_session(db_engine)
         try:
             self.logger.debug(
-                '{!r}: Writing results to DB (db_url={}) ...'.format(
-                    self, self._db_url))
+                f"Writing results to DB (db_url={self._db_url}) ...")
 
             m_task = session.query(orm.Task).\
                 filter(orm.Task.id == self.id).\
@@ -175,8 +177,7 @@ class Task(object):
                 m_task.result = retval.data[self.id]
 
             session.commit()
-            self.logger.debug(
-                '{!r}: {!r} successfully written.'.format(self, m_task))
+            self.logger.debug(f"Task successfully written.")
 
             return retval
 
@@ -187,4 +188,4 @@ class Task(object):
             session.close()
 
     def __repr__(self):
-        return '<{}(id={})'.format(type(self).__name__, self.id)
+        return '<{}(id={})>'.format(type(self).__name__, self.id)

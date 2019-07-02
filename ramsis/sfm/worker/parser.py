@@ -4,40 +4,18 @@ Parsing facilities for worker webservices.
 """
 
 import base64
-import functools
 
-from marshmallow import (Schema, fields, pre_load, validate, validates_schema,
-                         ValidationError)
+from marshmallow import fields, pre_load, validates_schema, ValidationError
 from webargs.flaskparser import abort
 from webargs.flaskparser import parser as _parser
 
-from ramsis.sfm.worker.utils import StatusCode
-
-
-def validate_positive(d):
-    return d >= 0
-
-
-validate_percentage = validate.Range(min=0, max=100)
-validate_longitude = validate.Range(min=-180., max=180.)
-validate_latitude = validate.Range(min=-90., max=90)
-validate_ph = validate.Range(min=0, max=14)
-
-Positive = functools.partial(fields.Float, validate=validate_positive)
-Percentage = functools.partial(fields.Float, validate=validate_percentage)
-
-
-class SchemaBase(Schema):
-
-    class Meta:
-        strict = True
-
-
-class QuakeMLQuantitySchemaBase(SchemaBase):
-    uncertainty = Positive()
-    loweruncertainty = Positive()
-    upperuncertainty = Positive()
-    confidencelevel = Percentage()
+from ramsis.sfm.worker.utils import (StatusCode, SchemaBase,
+                                     QuakeMLQuantitySchemaBase,
+                                     QuakeMLRealQuantitySchema,
+                                     validate_positive,
+                                     validate_ph,
+                                     validate_longitude,
+                                     validate_latitude)
 
 
 class QuakeMLTimeQuantitySchema(QuakeMLQuantitySchemaBase):
@@ -46,18 +24,6 @@ class QuakeMLTimeQuantitySchema(QuakeMLQuantitySchemaBase):
     TimeQuantity type.
     """
     value = fields.DateTime(format='iso')
-
-
-def QuakeMLRealQuantitySchema(validate=None):
-    """
-    Factory function for a `QuakeML <https://quake.ethz.ch/quakeml/>`_
-    RealQuantity type.
-    """
-
-    class _QuakeMLRealQuantitySchema(QuakeMLQuantitySchemaBase):
-        value = fields.Float(validate=validate)
-
-    return _QuakeMLRealQuantitySchema
 
 
 class SeismicCatalogSchema(SchemaBase):
