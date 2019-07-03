@@ -166,3 +166,7 @@ class SFMWorkerOMessageSchema(SchemaBase):
                        values=fields.Nested(ReservoirSchema))
     length = fields.Int()
     warning = fields.Str()
+
+    @post_dump
+    def clear_missing(self, data):
+        return self._clear_missing(data)
