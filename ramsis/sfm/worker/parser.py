@@ -156,9 +156,6 @@ class ModelParameterSchemaBase(SchemaBase):
     # duration in seconds
     bin_duration = fields.Float()
 
-    # XXX(damb): optional model specific model_parameters
-    config = fields.Dict(keys=fields.Str())
-
     @post_load
     def _compute_missing_bin_duration(self, data, **kwargs):
         """
