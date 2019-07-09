@@ -155,9 +155,7 @@ class SFMWorkerIMessageSchema(SchemaBase):
         With the current protocol version only a single well is supported.
     """
     seismic_catalog = fields.Nested(SeismicCatalogSchema, required=True)
-    # XXX(damb): Implicit definition of an injection well in order to allow
-    # serialization by means of the appropriate RT-RAMSIS borehole serializer.
-    # Note, that a well comes along with its hydraulics.
+    # NOTE(damb): A well comes along with its hydraulics.
     well = fields.Nested(BoreholeSchema, required=True)
     scenario = fields.Nested(ScenarioSchema, required=True)
     reservoir = fields.Nested(ReservoirSchema, required=True)
