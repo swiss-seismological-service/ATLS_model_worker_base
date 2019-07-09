@@ -49,9 +49,10 @@ Hence, to implement a concrete worker follow this recipe:
    `ramsis.sfm.worker.resource.RamsisWorkerListResource`. Optionally also for
    `ramsis.sfm.worker.resource.RamsisWorkerResource`.
 3. Worker-side you should use a specified implementation of
-   `ramsis.utils.protocol.WorkerInputMessage`. Define a custom model specific
-   schema for the `model_parameters` field in order to enable parameter
-   validation.
+   `ramsis.sfm.worker.parser.SFMWorkerIMessageSchema`. Define a custom model
+   specific schema for the `model_parameters` field. Simply, inherit from class
+   `ramsis.sfm.worker.parser.ModelParameterSchemaBase` in order to
+   enable parameter validation for model specific parameters.
 
 The worker communication protocol is standardized. That is why model
 configuration parameters by default are passed to the worker as a dictionary.
