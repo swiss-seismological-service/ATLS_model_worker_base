@@ -5,7 +5,8 @@ Parsing facilities for worker webservices.
 
 import base64
 
-from marshmallow import fields, pre_load, validates_schema, ValidationError
+from marshmallow import (fields, pre_load, post_load, validates_schema,
+                         ValidationError)
 from webargs.flaskparser import abort
 from webargs.flaskparser import parser as _parser
 
@@ -145,6 +146,31 @@ class ReservoirSchema(SchemaBase):
     geom = fields.String(required=True)
 
 
+class ModelParameterSchemaBase(SchemaBase):
+    """
+    Model parameter schema base class.
+    """
+    starttime = fields.DateTime(format='iso', required=True)
+    endtime = fields.DateTime(format='iso', required=True)
+
+    # duration in seconds
+    bin_duration = fields.Float()
+
+    # XXX(damb): optional model specific model_parameters
+    config = fields.Dict(keys=fields.Str())
+
+    @post_load
+    def _compute_missing_bin_duration(self, data, **kwargs):
+        """
+        Complement the :code:`bin_duration` field if missing.
+        """
+        if 'bin_duration' not in data:
+            data['bin_duration'] = (
+                data['endtime'] - data['starttime']).total_seconds()
+
+        return data
+
+
 class SFMWorkerIMessageSchema(SchemaBase):
     """
     Schema implementation for serializing input messages for seismicity
@@ -159,8 +185,7 @@ class SFMWorkerIMessageSchema(SchemaBase):
     well = fields.Nested(BoreholeSchema, required=True)
     scenario = fields.Nested(ScenarioSchema, required=True)
     reservoir = fields.Nested(ReservoirSchema, required=True)
-    # XXX(damb): model_parameters are optional
-    model_parameters = fields.Dict(keys=fields.Str())
+    model_parameters = fields.Nested(ModelParameterSchemaBase, required=True)
 
 
 @_parser.error_handler
