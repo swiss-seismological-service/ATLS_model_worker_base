@@ -38,11 +38,12 @@ _install_requires = [
     'Flask-SQLAlchemy>=2.3.2',
     'GDAL==2.2.3',
     'geoalchemy2>=0.6.1',
-    'marshmallow>=3.0.0b12',
+    'marshmallow>=3.0.0rc8',
     'numpy==1.15',
+    'python-dateutil>=2.8.0',
     "ramsis.utils==0.1",
     "SQLAlchemy>=1.2.10",
-    'webargs>=4.0.0', ]
+    'webargs>=5.3.2', ]
 
 _extras_require = {
     'doc': [
