@@ -142,7 +142,7 @@ class ReservoirSchema(SchemaBase):
     sub_geometries = fields.Nested('self', many=True)
 
     @post_dump(pass_original=True)
-    def geom_as_wkt(self, data, orig):
+    def geom_as_wkt(self, data, orig, **kwargs):
         """
         Use the :code:`WKT` representation of the reservoir geometry instead of
         :code:`WKB`.
@@ -168,5 +168,5 @@ class SFMWorkerOMessageSchema(SchemaBase):
     warning = fields.Str()
 
     @post_dump
-    def clear_missing(self, data):
+    def clear_missing(self, data, **kwargs):
         return self._clear_missing(data)
