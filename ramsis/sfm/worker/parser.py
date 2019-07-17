@@ -34,7 +34,7 @@ class SeismicCatalogSchema(SchemaBase):
     quakeml = fields.String(required=True)
 
     @pre_load
-    def b64decode(self, data):
+    def b64decode(self, data, **kwargs):
         """
         Decode the base64 encoded catalog. Return a `QuakeML
         <https://quake.ethz.ch/quakeml/QuakeML>`_ string.
@@ -123,7 +123,7 @@ class BoreholeSchema(SchemaBase):
     sections = fields.Nested(BoreholeSectionSchema, many=True, required=True)
 
     @validates_schema
-    def validate_sections(self, data):
+    def validate_sections(self, data, **kwargs):
         if len(data['sections']) != 1:
             raise ValidationError(
                 'InjectionWells are required to have a single section.')
@@ -186,7 +186,8 @@ class SFMWorkerIMessageSchema(SchemaBase):
 
 
 @_parser.error_handler
-def handle_request_parsing_error(err, req, schema):
+def handle_request_parsing_error(err, req, schema, error_status_code,
+                                 error_headers):
     """
     Webargs error handler that uses Flask-RESTful's abort function
     to return a JSON error response to the client.
