@@ -140,14 +140,16 @@ class Task(object):
         def create_session(db_engine):
             return sessionmaker(bind=db_engine)()
 
+        def task_from_db(session, task_id):
+            return session.query(orm.Task).\
+                filter(orm.Task.id == task_id).\
+                one()
+
         db_engine = create_engine(self._db_url)
         session = create_session(db_engine)
         # XXX(damb): fetch orm.Task from DB and update task state
         try:
-            m_task = session.query(orm.Task).\
-                filter(orm.Task.id == self.id).\
-                one()
-
+            m_task = task_from_db(session, self.id)
             m_task.status = StatusCode.TaskProcessing.name
             m_task.status_code = StatusCode.TaskProcessing.value
 
@@ -161,15 +163,11 @@ class Task(object):
 
         retval = self._run(**kwargs)
 
+        self.logger.debug(
+            f"Writing results to DB (db_url={self._db_url}) ...")
         session = create_session(db_engine)
         try:
-            self.logger.debug(
-                f"Writing results to DB (db_url={self._db_url}) ...")
-
-            m_task = session.query(orm.Task).\
-                filter(orm.Task.id == self.id).\
-                one()
-
+            m_task = task_from_db(session, self.id)
             m_task.status = retval.status
             m_task.status_code = retval.status_code
             m_task.warning = retval.warning
