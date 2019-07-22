@@ -295,11 +295,12 @@ def create_sfmramsisworkerlistresource(processes=5):
                 session.add(m_task)
                 session.commit()
 
-                self.logger.debug(
-                    f"{self!r}: {m_task!r} successfully created.")
             except Exception as err:
                 session.rollback()
                 raise CannotCreateTaskModel(err)
+            else:
+                self.logger.debug(
+                    f"{self!r}: {m_task!r} successfully created.")
             finally:
                 session.close()
 
