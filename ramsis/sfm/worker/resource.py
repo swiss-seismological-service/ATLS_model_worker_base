@@ -177,6 +177,9 @@ class SFMRamsisWorkerResource(RamsisWorkerBaseResource):
         except Exception as err:
             session.rollback()
             raise err
+        else:
+            self.logger.info(
+                f"Task (id={task_id}) successfully removed.")
         finally:
             session.close()
 
