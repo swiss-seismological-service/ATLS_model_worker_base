@@ -103,9 +103,14 @@ class Model(object):
     NAME = 'MODEL'
     DESCRIPTION = ''
 
-    def __init__(self):
+    def __init__(self, name=None, context={}):
+        self.context = context
+
+        self._name = name if name else self.NAME
         self._logger = logging.getLogger(self.LOGGER)
-        self.logger = ContextLoggerAdapter(self._logger, {'ctx': self})
+        ctx_logger = ({'ctx': [context['task'], self.name]}
+                      if context and 'task' in context else {'ctx': self.name})
+        self.logger = ContextLoggerAdapter(self._logger, ctx_logger)
 
         self._stdout = None
         self._stderr = None
@@ -113,6 +118,10 @@ class Model(object):
     @classmethod
     def orm(cls):
         return _Model(name=cls.NAME, description=cls.DESCRIPTION)
+
+    @property
+    def name(self):
+        return self._name
 
     @property
     def stdout(self):
@@ -161,7 +170,11 @@ class Model(object):
     def __setstate__(self, d):
         if '_logger' in d.keys():
             d['_logger'] = logging.getLogger(d['_logger'])
-            d['logger'] = ContextLoggerAdapter(d['_logger'], {'ctx': self})
+            d['logger'] = ContextLoggerAdapter(
+                d['_logger'],
+                {'ctx': [d['context']['task'], d['_name']]}
+                if d['context'] and 'task' in d['context']
+                else {'ctx': d['_name']})
             self.__dict__.update(d)
 
     def __repr__(self):
