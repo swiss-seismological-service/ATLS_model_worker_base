@@ -116,7 +116,7 @@ def QuakeMLRealQuantitySchema(validate=None):
         value = fields.Float(validate=validate)
 
         @post_dump
-        def clear_missing(self, data):
+        def clear_missing(self, data, **kwargs):
             return self._clear_missing(data)
 
     return _QuakeMLRealQuantitySchema
