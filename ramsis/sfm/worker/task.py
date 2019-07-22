@@ -178,7 +178,6 @@ class Task(object):
                                  if self.id in retval.data else retval.data)
 
             session.commit()
-            self.logger.debug(f"Task successfully written.")
 
             return retval
 
@@ -188,6 +187,8 @@ class Task(object):
         except Exception as err:
             session.rollback()
             raise err
+        else:
+            self.logger.debug(f"Task successfully written.")
         finally:
             session.close()
 
