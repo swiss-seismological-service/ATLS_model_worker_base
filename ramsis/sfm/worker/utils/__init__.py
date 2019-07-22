@@ -3,6 +3,7 @@
 General purpose ramsis.sfm.workers utilities
 """
 import argparse
+import collections
 import enum
 import functools
 import logging
@@ -52,8 +53,15 @@ class ContextLoggerAdapter(logging.LoggerAdapter):
     Adapter expecting the passed in dict-like object to have a 'ctx' key, whose
     value in brackets is prepended to the log message.
     """
+    CONTEXT_DELIMITER = '::'
+
     def process(self, msg, kwargs):
-        return '[%s] %s' % (self.extra['ctx'], msg), kwargs
+        if isinstance(self.extra['ctx'], collections.Sequence):
+            prefix = self.CONTEXT_DELIMITER.join(
+                f"{c}" for c in self.extra['ctx'])
+        else:
+            prefix = '%s' % self.extra['ctx']
+        return '[%s] %s' % (prefix, msg), kwargs
 
 
 # -----------------------------------------------------------------------------
