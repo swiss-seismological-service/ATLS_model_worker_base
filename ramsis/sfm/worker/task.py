@@ -132,7 +132,7 @@ class Task(object):
         :param kwargs: Extra keyword value parameters passed to the
             :py:class:`ramsis.sfm.worker.utils.Model` instance, additionally.
         """
-        return self._model(task_id=self.id, **self._task_args, **kwargs)
+        return self._model(**self._task_args, **kwargs)
 
     @with_exception_handling
     def __call__(self, **kwargs):
@@ -175,7 +175,8 @@ class Task(object):
             m_task.warning = retval.warning
 
             if retval.status_code == 200:
-                m_task.result = retval.data[self.id]
+                m_task.result = (retval.data[self.id]
+                                 if self.id in retval.data else retval.data)
 
             session.commit()
             self.logger.debug(f"Task successfully written.")

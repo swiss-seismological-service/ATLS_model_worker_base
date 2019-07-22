@@ -41,11 +41,11 @@ def with_exception_handling(func):
             # XXX(damb): The decorator must return its result in a specific
             # format such that the task both executing the Model and writing
             # the error information to the DB is able to handle the result.
-            task_id = args[0] if args else kwargs.get('task_id')
             return ModelResult.error(
                 status='ModelError-{}'.format(type(self).__name__),
                 status_code=StatusCode.WorkerError.value,
-                data={task_id: msg},
+                data=({self.context['task']: msg}
+                      if self.context and 'task' in self.context else msg),
                 warning='Caught in default model exception handler.')
 
     return decorator
@@ -131,7 +131,7 @@ class Model(object):
     def stderr(self):
         return self._stderr
 
-    def _run(self, task_id, **kwargs):
+    def _run(self, **kwargs):
         """
         Template method called when running a model *task*. This method
         **must** be implemented by concrete
@@ -140,23 +140,19 @@ class Model(object):
         Ideally, an instance of :py:class:`ModelResult` is returned to make use
         of data serialization techniques.
 
-        :param task_id: Task identifier
-        :type task_id: :py:class:`uuid.UUID`
         :param kwargs: Model task specific keyword value parameters
         """
         raise NotImplementedError
 
     @with_exception_handling
-    def __call__(self, task_id, **kwargs):
+    def __call__(self, **kwargs):
         """
         The concept of a *task* is implemented by means of calling or rather
         executing a :py:class:`Model` instance, respectively.
 
-        :param task_id: Task identifier
-        :type task_id: :py:class:`uuid.UUID`
         :param kwargs: Model task specific keyword value parameters
         """
-        return self._run(task_id, **kwargs)
+        return self._run(**kwargs)
 
     def __getstate__(self):
         # prevent pickling errors for loggers
