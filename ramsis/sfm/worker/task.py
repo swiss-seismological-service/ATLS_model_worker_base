@@ -179,8 +179,6 @@ class Task(object):
 
             session.commit()
 
-            return retval
-
         except NoResultFound as err:
             self.logger.warning(
                 f"Task unavailable ({err}). Unable to write results.")
@@ -191,6 +189,8 @@ class Task(object):
             self.logger.debug(f"Task successfully written.")
         finally:
             session.close()
+
+        return None
 
     def __repr__(self):
         return '<{}(id={})>'.format(type(self).__name__, self.id)
