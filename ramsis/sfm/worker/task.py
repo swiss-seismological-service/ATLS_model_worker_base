@@ -148,6 +148,7 @@ class Task(object):
 
         db_engine = create_engine(self._db_url)
         session = create_session(db_engine)
+        m_task_available = True
         # XXX(damb): fetch orm.Task from DB and update task state
         try:
             m_task = task_from_db(session, self.id)
@@ -156,11 +157,18 @@ class Task(object):
 
             session.commit()
 
+        except NoResultFound as err:
+            self.logger.warning(
+                f"Task unavailable ({err}). Nothing to be done.")
+            m_task_available = False
         except Exception as err:
             session.rollback()
             raise NoTaskModel(err)
         finally:
             session.close()
+
+        if not m_task_available:
+            return None
 
         retval = self._run(**kwargs)
 
