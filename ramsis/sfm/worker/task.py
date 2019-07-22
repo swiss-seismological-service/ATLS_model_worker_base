@@ -9,6 +9,7 @@ import uuid
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.exc import NoResultFound
 
 from ramsis.utils.error import ErrorWithTraceback
 from ramsis.sfm.worker import orm
@@ -181,6 +182,9 @@ class Task(object):
 
             return retval
 
+        except NoResultFound as err:
+            self.logger.warning(
+                f"Task unavailable ({err}). Unable to write results.")
         except Exception as err:
             session.rollback()
             raise err
