@@ -97,7 +97,7 @@ class Task(object):
 
     def __init__(self, model, db_url, task_id=None, **kwargs):
         self._logger = logging.getLogger(self.LOGGER)
-        self.logger = ContextLoggerAdapter(self._logger, {'ctx': self})
+        self.logger = ContextLoggerAdapter(self._logger, {'ctx': task_id})
 
         self._model = model
         self._db_url = db_url
@@ -120,7 +120,8 @@ class Task(object):
     def __setstate__(self, d):
         if '_logger' in d.keys():
             d['_logger'] = logging.getLogger(d['_logger'])
-            d['logger'] = ContextLoggerAdapter(d['_logger'], {'ctx': self})
+            d['logger'] = ContextLoggerAdapter(d['_logger'],
+                                               {'ctx': d['_task_id']})
             self.__dict__.update(d)
 
     @with_logging
@@ -131,7 +132,7 @@ class Task(object):
         :param kwargs: Extra keyword value parameters passed to the
             :py:class:`ramsis.sfm.worker.utils.Model` instance, additionally.
         """
-        return self._model(task_id=self.id, **self._task_args, **kwargs)
+        return self._model(**self._task_args, **kwargs)
 
     @with_exception_handling
     def __call__(self, **kwargs):
@@ -174,7 +175,8 @@ class Task(object):
             m_task.warning = retval.warning
 
             if retval.status_code == 200:
-                m_task.result = retval.data[self.id]
+                m_task.result = (retval.data[self.id]
+                                 if self.id in retval.data else retval.data)
 
             session.commit()
             self.logger.debug(f"Task successfully written.")
