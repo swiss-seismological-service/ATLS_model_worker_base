@@ -15,7 +15,7 @@ from flask_restful import Resource
 from sqlalchemy.orm.exc import NoResultFound
 
 from ramsis.sfm.worker import orm
-from ramsis.sfm.worker.model import ModelResult
+from ramsis.sfm.worker.model import ModelResult as ResponseData
 from ramsis.sfm.worker.parser import parser, SFMWorkerIMessageSchema
 from ramsis.sfm.worker.task import Task
 from ramsis.sfm.worker.utils import StatusCode, SFMWorkerOMessageSchema
@@ -78,7 +78,7 @@ def with_validated_args(func):
         except ValueError as err:
             self.logger.warning('Invalid argument: {}.'.format(err))
 
-            msg = ModelResult.no_content(kwargs.get('task_id'))
+            msg = ResponseData.no_content(kwargs.get('task_id'))
             self.logger.debug('Response msg: {}'.format(msg))
 
             return make_response(msg)
@@ -132,7 +132,7 @@ class SFMRamsisWorkerResource(RamsisWorkerBaseResource):
                 filter(orm.Task.id == task_id).\
                 one()
 
-            msg = ModelResult.from_task(task)
+            msg = ResponseData.from_task(task)
             self.logger.debug(f"Response msg: {msg}")
 
             return make_response(msg)
@@ -158,7 +158,7 @@ class SFMRamsisWorkerResource(RamsisWorkerBaseResource):
                 filter(orm.Task.id == task_id).\
                 one()
 
-            msg = ModelResult.from_task(task)
+            msg = ResponseData.from_task(task)
             self.logger.debug(f"Response msg: {msg}")
 
             session.delete(task)
@@ -170,7 +170,7 @@ class SFMRamsisWorkerResource(RamsisWorkerBaseResource):
             self.logger.warning(
                 f"No matching task found (id={task_id})")
 
-            msg = ModelResult.no_content(task_id)
+            msg = ResponseData.no_content(task_id)
             self.logger.debug(f"Response msg: {msg}")
             return make_response(msg)
 
@@ -248,7 +248,7 @@ def create_sfmramsisworkerlistresource(processes=5):
                 tasks = session.query(orm.Task).\
                     all()
 
-                msgs = [ModelResult.from_task(t) for t in tasks]
+                msgs = [ResponseData.from_task(t) for t in tasks]
                 self.logger.debug(f"Response msgs: {msgs}")
 
                 return make_response(msgs, serializer=SFMWorkerOMessageSchema,
@@ -313,7 +313,7 @@ def create_sfmramsisworkerlistresource(processes=5):
 
             _ = self._pool().apply_async(t) # noqa
 
-            msg = ModelResult.accepted(task_id)
+            msg = ResponseData.accepted(task_id)
             self.logger.debug('Task ({}) accepted.'.format(task_id))
 
             return make_response(msg)
