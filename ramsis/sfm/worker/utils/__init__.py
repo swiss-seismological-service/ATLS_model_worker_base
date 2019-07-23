@@ -163,17 +163,76 @@ class ReservoirSchema(SchemaBase):
         return data
 
 
-class SFMWorkerOMessageSchema(SchemaBase):
+class SFMWorkerResponseDataAttributesSchema(SchemaBase):
     """
-    Schema implementation for de-/serializing
-    :py:class:`ramsis.sfm.worker.model.ModelResult`.
+    Schema representation of the SFM worker response data attributes.
     """
     status = fields.Str()
     status_code = fields.Int()
-    data = fields.Dict(keys=fields.UUID(),
-                       values=fields.Nested(ReservoirSchema))
+    forecast = fields.Nested(ReservoirSchema)
     warning = fields.Str()
 
     @post_dump
     def clear_missing(self, data, **kwargs):
         return self._clear_missing(data)
+
+
+class SFMWorkerResponseDataSchema(SchemaBase):
+    """
+    Schema representation fo the SFM worker response data.
+    """
+    id = fields.UUID()
+    attributes = fields.Nested(SFMWorkerResponseDataAttributesSchema)
+
+    @post_dump
+    def clear_missing(self, data, **kwargs):
+        return self._clear_missing(data)
+
+
+class SFMWorkerOMessageSchema(SchemaBase):
+    """
+    Schema implementation for de-/serializing
+    :py:class:`ramsis.sfm.worker.model.ModelResult`.
+    """
+    data = fields.Method("_serialize_data")
+    errors = fields.Dict()
+    meta = fields.Dict()
+
+    @post_dump
+    def clear_missing(self, data, **kwargs):
+        return self._clear_missing(data)
+
+    def _serialize_data(self, obj):
+        if 'data' in obj:
+            if isinstance(obj['data'], list):
+                return SFMWorkerResponseDataSchema(
+                    context=self.context, many=True).dump(obj['data'])
+
+            return SFMWorkerResponseDataSchema(
+                context=self.context).dump(obj['data'])
+
+
+class ResponseData(collections.namedtuple(
+        'ResponseData', ['id', 'attributes'])):
+
+    @classmethod
+    def no_content(cls):
+        return cls(id=None, attributes=None)
+
+    @classmethod
+    def accepted(cls, task_id):
+        attributes = {
+            'status_code': StatusCode.TaskAccepted.value,
+            'status': StatusCode.TaskAccepted.name}
+
+        return cls(id=task_id, attributes=attributes)
+
+    @classmethod
+    def from_task(cls, task):
+        attributes = {
+            'status_code': task.status_code,
+            'status': task.status,
+            'forecast': task.result,
+            'warning': task.warning}
+
+        return cls(id=task.id, attributes=attributes)

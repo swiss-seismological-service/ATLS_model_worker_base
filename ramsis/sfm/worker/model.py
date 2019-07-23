@@ -69,30 +69,6 @@ class ModelResult(namedtuple('ModelResult',
                    status_code=StatusCode.TaskCompleted.value,
                    data=data, warning=warning)
 
-    @classmethod
-    def accepted(cls, task_id):
-        data = {str(task_id): {}}
-        return cls(status=StatusCode.TaskAccepted.name,
-                   status_code=StatusCode.TaskAccepted.value,
-                   data=data, warning='')
-
-    @classmethod
-    def no_content(cls, task_id=None):
-        return cls(status=StatusCode.TaskNotAvailable.name,
-                   status_code=StatusCode.TaskNotAvailable.value,
-                   data={},
-                   warning=('No such task: (id={})'.format(task_id)
-                            if task_id else ''))
-
-    @classmethod
-    def from_task(cls, task):
-        data = {str(task.id): (task.result if task.status_code == 200 else
-                               task.status)}
-        return cls(status=task.status,
-                   status_code=task.status_code,
-                   data=data,
-                   warning=task.warning)
-
 
 # -----------------------------------------------------------------------------
 class Model(object):

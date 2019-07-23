@@ -15,14 +15,15 @@ from flask_restful import Resource
 from sqlalchemy.orm.exc import NoResultFound
 
 from ramsis.sfm.worker import orm
-from ramsis.sfm.worker.model import ModelResult as ResponseData
 from ramsis.sfm.worker.parser import parser, SFMWorkerIMessageSchema
 from ramsis.sfm.worker.task import Task
-from ramsis.sfm.worker.utils import StatusCode, SFMWorkerOMessageSchema
+from ramsis.sfm.worker.utils import (StatusCode, SFMWorkerOMessageSchema,
+                                     ResponseData)
 from ramsis.utils.error import Error
 
 
 _HTTP_OK = 200
+_HTTP_NO_CONTENT = 204
 
 
 # -----------------------------------------------------------------------------
@@ -40,10 +41,12 @@ def make_response(msg, status_code=None,
     """
     Factory function creating :py:class:`flask.Flask.response_class.
 
-    :param msg: Serialized message the response is created from
-    :type msg: :py:class:`ramsis.sfm.worker.model.ModelResult`
+    :param msg: Serialized message the response is created from :type msg:
+    :py:class:`ramsis.sfm.worker.utils.ResponseData` or list of
+        :py:class:`ramsis.sfm.worker.utils.ResponseData`
     :param status_code: Force HTTP status code. If :code:`None` the status code
-        is extracted from :code:`msg`
+        is extracted from :code:`msg`. If the status code is equal to
+        :code:`204: an empty response is returned.
     :type status_code: int or None
     :param serializer: Schema to be used for serialization
     :type serializer: :py:class:`marshmallow.Schema`
@@ -51,23 +54,26 @@ def make_response(msg, status_code=None,
     :returns: HTTP response
     :rtype: :py:class:`flask.Flask.response`
     """
+    if status_code == _HTTP_NO_CONTENT:
+        return '', _HTTP_NO_CONTENT
+
     try:
         if status_code is None:
             status_code = _HTTP_OK
             try:
-                status_code = int(msg.status_code)
-            except AttributeError:
+                status_code = int(msg.attributes['status_code'])
+            except (KeyError, AttributeError):
                 if not isinstance(msg, list):
                     raise
 
+        msg = dict(data=msg)
         resp = _make_response(serializer(**kwargs).dumps(msg), status_code)
-        resp.headers['Content-Type'] = 'application/json'
-        # if msg.warning:
-        #     resp.headers['Warning'] = '299 {}'.format(msg.warning)
-        return resp
 
     except Exception as err:
         raise WorkerError(err)
+
+    resp.headers['Content-Type'] = 'application/json'
+    return resp
 
 
 def with_validated_args(func):
@@ -81,10 +87,10 @@ def with_validated_args(func):
         except ValueError as err:
             self.logger.warning('Invalid argument: {}.'.format(err))
 
-            msg = ResponseData.no_content(kwargs.get('task_id'))
+            msg = ResponseData.no_content()
             self.logger.debug('Response msg: {}'.format(msg))
 
-            return make_response(msg)
+            return make_response(msg, status_code=_HTTP_NO_CONTENT)
 
         return func(self, *args, **kwargs)
 
@@ -140,6 +146,8 @@ class SFMRamsisWorkerResource(RamsisWorkerBaseResource):
 
             return make_response(msg, status_code=_HTTP_OK)
 
+        except NoResultFound:
+            return make_response('', status_code=_HTTP_NO_CONTENT)
         except Exception as err:
             session.rollback()
             raise err
@@ -170,13 +178,7 @@ class SFMRamsisWorkerResource(RamsisWorkerBaseResource):
             return make_response(msg, status_code=_HTTP_OK)
 
         except NoResultFound:
-            self.logger.warning(
-                f"No matching task found (id={task_id})")
-
-            msg = ResponseData.no_content(task_id)
-            self.logger.debug(f"Response msg: {msg}")
-            return make_response(msg)
-
+            return make_response('', status_code=_HTTP_NO_CONTENT)
         except Exception as err:
             session.rollback()
             raise err
@@ -251,17 +253,13 @@ def create_sfmramsisworkerlistresource(processes=5):
                 tasks = session.query(orm.Task).\
                     all()
 
-                msgs = [ResponseData.from_task(t) for t in tasks]
-                self.logger.debug(f"Response msgs: {msgs}")
+                msg = [ResponseData.from_task(t) for t in tasks]
 
-                return make_response(msgs, status_code=_HTTP_OK,
-                                     serializer=SFMWorkerOMessageSchema,
-                                     many=True)
+                return make_response(msg, status_code=_HTTP_OK,
+                                     serializer=SFMWorkerOMessageSchema)
+
             except NoResultFound:
-                self.logger.debug("No results available.")
-                msg = ResponseData.no_content()
-                self.logger.debug(f"Response msg: {msg}")
-                return make_response(msg)
+                return make_response('', status_code=_HTTP_NO_CONTENT)
             except Exception as err:
                 session.rollback()
                 raise err
