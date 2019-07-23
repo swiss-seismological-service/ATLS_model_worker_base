@@ -257,7 +257,11 @@ def create_sfmramsisworkerlistresource(processes=5):
                 return make_response(msgs, status_code=_HTTP_OK,
                                      serializer=SFMWorkerOMessageSchema,
                                      many=True)
-
+            except NoResultFound:
+                self.logger.debug("No results available.")
+                msg = ResponseData.no_content()
+                self.logger.debug(f"Response msg: {msg}")
+                return make_response(msg)
             except Exception as err:
                 session.rollback()
                 raise err
