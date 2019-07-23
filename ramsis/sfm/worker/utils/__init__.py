@@ -172,7 +172,6 @@ class SFMWorkerOMessageSchema(SchemaBase):
     status_code = fields.Int()
     data = fields.Dict(keys=fields.UUID(),
                        values=fields.Nested(ReservoirSchema))
-    length = fields.Int()
     warning = fields.Str()
 
     @post_dump

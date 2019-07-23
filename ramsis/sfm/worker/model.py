@@ -56,32 +56,31 @@ class ModelResult(namedtuple('ModelResult',
                              ['status',
                               'status_code',
                               'data',
-                              'length',
                               'warning'])):
 
     @classmethod
     def error(cls, status, status_code, data={}, warning=''):
         return cls(status=status, status_code=status_code, data=data,
-                   length=len(data), warning=warning)
+                   warning=warning)
 
     @classmethod
     def ok(cls, data, warning=''):
         return cls(status=StatusCode.TaskCompleted.name,
                    status_code=StatusCode.TaskCompleted.value,
-                   data=data, length=len(data), warning=warning)
+                   data=data, warning=warning)
 
     @classmethod
     def accepted(cls, task_id):
         data = {str(task_id): {}}
         return cls(status=StatusCode.TaskAccepted.name,
                    status_code=StatusCode.TaskAccepted.value,
-                   data=data, length=len(data), warning='')
+                   data=data, warning='')
 
     @classmethod
     def no_content(cls, task_id):
         return cls(status=StatusCode.TaskNotAvailable.name,
                    status_code=StatusCode.TaskNotAvailable.value,
-                   data={}, length=0,
+                   data={},
                    warning='No such task: (id={})'.format(task_id))
 
     @classmethod
@@ -90,7 +89,7 @@ class ModelResult(namedtuple('ModelResult',
                                task.status)}
         return cls(status=task.status,
                    status_code=task.status_code,
-                   data=data, length=len(data),
+                   data=data,
                    warning=task.warning)
 
 
