@@ -22,6 +22,9 @@ from ramsis.sfm.worker.utils import StatusCode, SFMWorkerOMessageSchema
 from ramsis.utils.error import Error
 
 
+_HTTP_OK = 200
+
+
 # -----------------------------------------------------------------------------
 class WorkerError(Error):
     """Base worker error ({})."""
@@ -50,7 +53,7 @@ def make_response(msg, status_code=None,
     """
     try:
         if status_code is None:
-            status_code = 200
+            status_code = _HTTP_OK
             try:
                 status_code = int(msg.status_code)
             except AttributeError:
@@ -135,7 +138,7 @@ class SFMRamsisWorkerResource(RamsisWorkerBaseResource):
             msg = ResponseData.from_task(task)
             self.logger.debug(f"Response msg: {msg}")
 
-            return make_response(msg)
+            return make_response(msg, status_code=_HTTP_OK)
 
         except Exception as err:
             session.rollback()
@@ -164,7 +167,7 @@ class SFMRamsisWorkerResource(RamsisWorkerBaseResource):
             session.delete(task)
             session.commit()
 
-            return make_response(msg, status_code=200)
+            return make_response(msg, status_code=_HTTP_OK)
 
         except NoResultFound:
             self.logger.warning(
@@ -251,7 +254,8 @@ def create_sfmramsisworkerlistresource(processes=5):
                 msgs = [ResponseData.from_task(t) for t in tasks]
                 self.logger.debug(f"Response msgs: {msgs}")
 
-                return make_response(msgs, serializer=SFMWorkerOMessageSchema,
+                return make_response(msgs, status_code=_HTTP_OK,
+                                     serializer=SFMWorkerOMessageSchema,
                                      many=True)
 
             except Exception as err:
