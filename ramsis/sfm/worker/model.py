@@ -77,11 +77,12 @@ class ModelResult(namedtuple('ModelResult',
                    data=data, warning='')
 
     @classmethod
-    def no_content(cls, task_id):
+    def no_content(cls, task_id=None):
         return cls(status=StatusCode.TaskNotAvailable.name,
                    status_code=StatusCode.TaskNotAvailable.value,
                    data={},
-                   warning='No such task: (id={})'.format(task_id))
+                   warning=('No such task: (id={})'.format(task_id)
+                            if task_id else ''))
 
     @classmethod
     def from_task(cls, task):
