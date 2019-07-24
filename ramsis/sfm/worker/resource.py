@@ -66,6 +66,7 @@ def make_response(msg, status_code=None,
                 if not isinstance(msg, list):
                     raise
 
+        # XXX(damb): Wrap response with data
         msg = dict(data=msg)
         resp = _make_response(serializer(**kwargs).dumps(msg), status_code)
 
