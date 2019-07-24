@@ -168,21 +168,47 @@ class ModelParameterSchemaBase(SchemaBase):
         return data
 
 
-class SFMWorkerIMessageSchema(SchemaBase):
+def create_sfm_worker_imessage_schema(
+        model_parameters_schema=ModelParameterSchemaBase):
     """
-    Schema implementation for serializing input messages for seismicity
-    forecast model worker implementations.
+    Factory function for a SFM worker :code:`runs/` input message schema.
 
-    .. note::
-
-        With the current protocol version only a single well is supported.
+    :param model_parameters_schema: Schema for model parameters.
+    :type model_parameters_schema: :py:class:`marshmallow.Schema`
     """
-    seismic_catalog = fields.Nested(SeismicCatalogSchema, required=True)
-    # NOTE(damb): A well comes along with its hydraulics.
-    well = fields.Nested(BoreholeSchema, required=True)
-    scenario = fields.Nested(ScenarioSchema, required=True)
-    reservoir = fields.Nested(ReservoirSchema, required=True)
-    model_parameters = fields.Nested(ModelParameterSchemaBase, required=True)
+
+    class _SFMWorkerRunsAttributesSchema(SchemaBase):
+        """
+        Schema implementation for deserializing attributes seismicity
+        forecast model worker implementations.
+
+        .. note::
+
+            With the current protocol version only a single well is supported.
+        """
+        seismic_catalog = fields.Nested(SeismicCatalogSchema, required=True)
+        # NOTE(damb): A well comes along with its hydraulics.
+        well = fields.Nested(BoreholeSchema, required=True)
+        scenario = fields.Nested(ScenarioSchema, required=True)
+        reservoir = fields.Nested(ReservoirSchema, required=True)
+        model_parameters = fields.Nested(model_parameters_schema,
+                                         required=True)
+
+    class _SFMWorkerRunsSchema(SchemaBase):
+        type = fields.Str(missing='runs')
+        attributes = fields.Nested(_SFMWorkerRunsAttributesSchema)
+
+    class _SFMWorkerIMessageSchema(SchemaBase):
+        """
+        Schema implementation for serializing input messages for seismicity
+        forecast model worker implementations.
+        """
+        data = fields.Nested(_SFMWorkerRunsSchema)
+
+    return _SFMWorkerIMessageSchema
+
+
+SFMWorkerIMessageSchema = create_sfm_worker_imessage_schema()
 
 
 @_parser.error_handler

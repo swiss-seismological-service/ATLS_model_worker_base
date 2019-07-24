@@ -316,7 +316,8 @@ def create_sfmramsisworkerlistresource(processes=5):
                 model=self._model(context={'task': task_id},
                                   **current_app.config['RAMSIS_SFM_DEFAULTS']),
                 task_id=task_id,
-                db_url=current_app.config['SQLALCHEMY_DATABASE_URI'], **args)
+                db_url=current_app.config['SQLALCHEMY_DATABASE_URI'],
+                **args['data']['attributes'])
 
             _ = self._pool().apply_async(t) # noqa
 
