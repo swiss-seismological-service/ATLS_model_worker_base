@@ -9,6 +9,7 @@ import uuid
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.exc import NoResultFound
 
 from ramsis.utils.error import ErrorWithTraceback
 from ramsis.sfm.worker import orm
@@ -140,36 +141,42 @@ class Task(object):
         def create_session(db_engine):
             return sessionmaker(bind=db_engine)()
 
-        db_engine = create_engine(self._db_url)
-        session = create_session(db_engine)
-        # XXX(damb): fetch orm.Task from DB and update task state
-        try:
-            m_task = session.query(orm.Task).\
-                filter(orm.Task.id == self.id).\
+        def task_from_db(session, task_id):
+            return session.query(orm.Task).\
+                filter(orm.Task.id == task_id).\
                 one()
 
+        db_engine = create_engine(self._db_url)
+        session = create_session(db_engine)
+        m_task_available = True
+        # XXX(damb): fetch orm.Task from DB and update task state
+        try:
+            m_task = task_from_db(session, self.id)
             m_task.status = StatusCode.TaskProcessing.name
             m_task.status_code = StatusCode.TaskProcessing.value
 
             session.commit()
 
+        except NoResultFound as err:
+            self.logger.warning(
+                f"Task unavailable ({err}). Nothing to be done.")
+            m_task_available = False
         except Exception as err:
             session.rollback()
             raise NoTaskModel(err)
         finally:
             session.close()
 
+        if not m_task_available:
+            return None
+
         retval = self._run(**kwargs)
 
+        self.logger.debug(
+            f"Writing results to DB (db_url={self._db_url}) ...")
         session = create_session(db_engine)
         try:
-            self.logger.debug(
-                f"Writing results to DB (db_url={self._db_url}) ...")
-
-            m_task = session.query(orm.Task).\
-                filter(orm.Task.id == self.id).\
-                one()
-
+            m_task = task_from_db(session, self.id)
             m_task.status = retval.status
             m_task.status_code = retval.status_code
             m_task.warning = retval.warning
@@ -179,15 +186,19 @@ class Task(object):
                                  if self.id in retval.data else retval.data)
 
             session.commit()
-            self.logger.debug(f"Task successfully written.")
 
-            return retval
-
+        except NoResultFound as err:
+            self.logger.warning(
+                f"Task unavailable ({err}). Unable to write results.")
         except Exception as err:
             session.rollback()
             raise err
+        else:
+            self.logger.debug(f"Task successfully written.")
         finally:
             session.close()
+
+        return None
 
     def __repr__(self):
         return '<{}(id={})>'.format(type(self).__name__, self.id)

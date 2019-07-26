@@ -177,6 +177,9 @@ class SFMRamsisWorkerResource(RamsisWorkerBaseResource):
         except Exception as err:
             session.rollback()
             raise err
+        else:
+            self.logger.info(
+                f"Task (id={task_id}) successfully removed.")
         finally:
             session.close()
 
@@ -292,11 +295,12 @@ def create_sfmramsisworkerlistresource(processes=5):
                 session.add(m_task)
                 session.commit()
 
-                self.logger.debug(
-                    f"{self!r}: {m_task!r} successfully created.")
             except Exception as err:
                 session.rollback()
                 raise CannotCreateTaskModel(err)
+            else:
+                self.logger.debug(
+                    f"{self!r}: {m_task!r} successfully created.")
             finally:
                 session.close()
 
