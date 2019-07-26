@@ -4,6 +4,7 @@ Extensions for miscellaneous entities.
 """
 
 import warnings
+import copy
 
 from ramsis.utils.error import ErrorWithTraceback
 
@@ -107,3 +108,26 @@ class CoordinateMixin(object):
     def __repr__(self):
         return '<CoordinateMixin(x=%s, y=%s, z=%s)>' % (
             self._x, self._y, self._z)
+
+def derived_dict(base, override):
+    newdict = copy.deepcopy(base)
+    for k, v in override.items():
+        newvalue = v
+        if isinstance(v, dict):
+            try:
+                base_value = newdict[k]
+            except KeyError:
+                pass
+            else:
+                if isinstance(base_value, dict):
+                    newvalue = derived_dict(base_value, v)
+        newdict[k] = newvalue
+    return newdict
+
+def merge_parameters(input_params, model_defaults, base_defaults):
+    try:
+        combined_defaults = derived_dict(base_defaults, model_defaults)
+        combined_params = derived_dict(combined_defaults, input_params)
+    except AttributeError as err:
+        raise ConfigError(err)
+    return combined_params
