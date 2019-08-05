@@ -123,50 +123,43 @@ class Model(ORMBase):
         return "<{}(name={})>".format(type(self).__name__, self.name)
 
 
-class RealQuantity(ORMBase):
-    """
-    ORM mapping representing a :py:code:`QuakeMLRealQuantity`.
-    """
-    value = Column(Float, nullable=False)
-    uncertainty = Column(Float)
-    loweruncertainty = Column(Float)
-    upperuncertainty = Column(Float)
-    confidencelevel = Column(Float)
-
-
 class ModelResultSample(ORMBase):
     """
     ORM mapping representing a single sample of a model result.
     """
     starttime = Column(DateTime)
     endtime = Column(DateTime)
-    number_events_id = Column(Integer, ForeignKey('realquantity.oid'))
-    number_events = relationship('ramsis.sfm.worker.orm.RealQuantity',
-                        backref=backref('_modelresultsample_rate',
-                                        uselist=False),
-                        foreign_keys=[number_events_id])
+    number_events_value = Column(Float, nullable=False)
+    number_events_uncertainty = Column(Float)
+    number_events_loweruncertainty = Column(Float)
+    number_events_upperuncertainty = Column(Float)
+    number_events_confidencelevel = Column(Float)
 
-    hydraulic_vol_id = Column(Integer, ForeignKey('realquantity.oid'))
-    hydraulic_vol = relationship('ramsis.sfm.worker.orm.RealQuantity',
-                        backref=backref('_modelresultsample_hydraulic_vol',
-                                        uselist=False),
-                        foreign_keys=[hydraulic_vol_id])
 
-    b_id = Column(Integer, ForeignKey('realquantity.oid'))
-    b = relationship('ramsis.sfm.worker.orm.RealQuantity',
-                     backref=backref('_modelresultsample_b',
-                                     uselist=False),
-                     foreign_keys=[b_id])
-    a_id = Column(Integer, ForeignKey('realquantity.oid'))
-    a = relationship('ramsis.sfm.worker.orm.RealQuantity',
-                     backref=backref('_modelresultsample_a',
-                                     uselist=False),
-                     foreign_keys=[a_id])
-    mc_id = Column(Integer, ForeignKey('realquantity.oid'))
-    mc = relationship('ramsis.sfm.worker.orm.RealQuantity',
-                     backref=backref('_modelresultsample_mc',
-                                     uselist=False),
-                     foreign_keys=[mc_id])
+    hydraulic_vol_value = Column(Float, nullable=False)
+    hydraulic_vol_uncertainty = Column(Float)
+    hydraulic_vol_loweruncertainty = Column(Float)
+    hydraulic_vol_upperuncertainty = Column(Float)
+    hydraulic_vol_confidencelevel = Column(Float)
+
+    b_value = Column(Float, nullable=False)
+    b_uncertainty = Column(Float)
+    b_loweruncertainty = Column(Float)
+    b_upperuncertainty = Column(Float)
+    b_confidencelevel = Column(Float)
+
+    a_value = Column(Float, nullable=False)
+    a_uncertainty = Column(Float)
+    a_loweruncertainty = Column(Float)
+    a_upperuncertainty = Column(Float)
+    a_confidencelevel = Column(Float)
+
+    mc_value = Column(Float, nullable=False)
+    mc_uncertainty = Column(Float)
+    mc_loweruncertainty = Column(Float)
+    mc_upperuncertainty = Column(Float)
+    mc_confidencelevel = Column(Float)
+
     reservoir_id = Column(Integer, ForeignKey('reservoir.oid'))
     reservoir = relationship('ramsis.sfm.worker.orm.Reservoir',
                              back_populates='samples')
