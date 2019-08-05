@@ -10,8 +10,9 @@ from sqlalchemy import create_engine
 
 from ramsis.utils.app import CustomParser, App, AppError
 from ramsis.utils.error import Error, ExitCode
-from ramsis.sfm.worker import settings, orm
+from ramsis.sfm.worker import orm
 from ramsis.sfm.worker.utils import url
+from ramsis.sfm.em1.core.parser import default_params
 
 __version__ = '0.1'
 
@@ -89,12 +90,12 @@ def main():
     """
 
     app = DBInitApp(log_id='RAMSIS')
-
+    defaults = default_params('ws_params')
+            
     try:
         app.configure(
-            settings.PATH_RAMSIS_WORKER_CONFIG,
-            positional_required_args=['db_url'],
-            config_section=settings.RAMSIS_WORKER_DB_CONFIG_SECTION)
+            defaults['PATH_RAMSIS_WORKER_CONFIG'],
+            positional_required_args=['db_url'])
     except AppError as err:
         # handle errors during the application configuration
         print('ERROR: Application configuration failed "%s".' % err,
