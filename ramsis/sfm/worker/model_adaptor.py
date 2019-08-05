@@ -71,7 +71,7 @@ class ModelResult(namedtuple('ModelResult',
 
 
 # -----------------------------------------------------------------------------
-class Model(object):
+class ModelAdaptor(object):
     """
     RT-RAMSIS :py:class:`Model` base class.
     """

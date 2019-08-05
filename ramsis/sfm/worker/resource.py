@@ -15,7 +15,7 @@ from flask_restful import Resource
 from sqlalchemy.orm.exc import NoResultFound
 
 from ramsis.sfm.worker import orm
-from ramsis.sfm.worker.parser import parser, SFMWorkerIMessageSchema
+from ramsis.sfm.worker.parser import parser#, SFMWorkerIMessageSchema
 from ramsis.sfm.worker.task import Task
 from ramsis.sfm.worker.utils import (StatusCode, SFMWorkerOMessageSchema,
                                      ResponseData)

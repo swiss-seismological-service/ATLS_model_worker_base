@@ -19,6 +19,18 @@ from ramsis.sfm.worker.utils import (StatusCode, SchemaBase,
                                      validate_latitude)
 
 
+
+class TupleField(fields.Field):
+
+    def __init__(self, entries, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._entries = entries
+
+    def _deserialize(self, value, attr=None, data=None):
+        return tuple(
+            field._deserialize(val, attr, data) for field, val in
+            zip(self._entries, value))
+
 class QuakeMLTimeQuantitySchema(QuakeMLQuantitySchemaBase):
     """
     Schema representation of a `QuakeML <https://quake.ethz.ch/quakeml/>`_
@@ -150,22 +162,33 @@ class ModelParameterSchemaBase(SchemaBase):
     """
     Model parameter schema base class.
     """
-    starttime = fields.DateTime(format='iso', required=True)
-    endtime = fields.DateTime(format='iso', required=True)
+
+
+    # dim-x, dim-y, dim-z in meters
+    voxel_dimensions_m = TupleField(
+        [fields.Float(required=True), fields.Float(required=True),
+         fields.Float(required=True)])
+    local_srs = fields.String()
+
+    # ----
+    #XXX(damb): Forecast specific parameters
+    fc_datetime_start = fields.DateTime(format='iso', required=True)
+    fc_datetime_end = fields.DateTime(format='iso', required=True)
+    fc_increment_seconds = fields.Float()
+    fc_threshold_magnitude = fields.Float()
+
+
+    # ----
+    #XXX(damb): Training specific parameters
+    # Leave blank, as the default config within em1_model will check the
+    # hydraulic input and form training period on this
+    training_seconds = fields.Float()
+    end_training = fields.DateTime()
+    training_events_threshold = fields.Integer()
 
     # duration in seconds
     bin_duration = fields.Float()
 
-    @post_load
-    def _compute_missing_bin_duration(self, data, **kwargs):
-        """
-        Complement the :code:`bin_duration` field if missing.
-        """
-        if 'bin_duration' not in data:
-            data['bin_duration'] = (
-                data['endtime'] - data['starttime']).total_seconds()
-
-        return data
 
 
 def create_sfm_worker_imessage_schema(
@@ -208,7 +231,7 @@ def create_sfm_worker_imessage_schema(
     return _SFMWorkerIMessageSchema
 
 
-SFMWorkerIMessageSchema = create_sfm_worker_imessage_schema()
+SFMWorkerIMessageSchema = create_sfm_worker_imessage_schema(model_parameters_schema=ModelParameterSchemaBase)
 
 
 @_parser.error_handler

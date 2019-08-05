@@ -140,18 +140,33 @@ class ModelResultSample(ORMBase):
     """
     starttime = Column(DateTime)
     endtime = Column(DateTime)
-    rate_id = Column(Integer, ForeignKey('realquantity.oid'))
-    rate = relationship('ramsis.sfm.worker.orm.RealQuantity',
+    number_events_id = Column(Integer, ForeignKey('realquantity.oid'))
+    number_events = relationship('ramsis.sfm.worker.orm.RealQuantity',
                         backref=backref('_modelresultsample_rate',
                                         uselist=False),
-                        foreign_keys=[rate_id])
+                        foreign_keys=[number_events_id])
+
+    hydraulic_vol_id = Column(Integer, ForeignKey('realquantity.oid'))
+    hydraulic_vol = relationship('ramsis.sfm.worker.orm.RealQuantity',
+                        backref=backref('_modelresultsample_hydraulic_vol',
+                                        uselist=False),
+                        foreign_keys=[hydraulic_vol_id])
 
     b_id = Column(Integer, ForeignKey('realquantity.oid'))
     b = relationship('ramsis.sfm.worker.orm.RealQuantity',
                      backref=backref('_modelresultsample_b',
                                      uselist=False),
                      foreign_keys=[b_id])
-
+    a_id = Column(Integer, ForeignKey('realquantity.oid'))
+    a = relationship('ramsis.sfm.worker.orm.RealQuantity',
+                     backref=backref('_modelresultsample_a',
+                                     uselist=False),
+                     foreign_keys=[a_id])
+    mc_id = Column(Integer, ForeignKey('realquantity.oid'))
+    mc = relationship('ramsis.sfm.worker.orm.RealQuantity',
+                     backref=backref('_modelresultsample_mc',
+                                     uselist=False),
+                     foreign_keys=[mc_id])
     reservoir_id = Column(Integer, ForeignKey('reservoir.oid'))
     reservoir = relationship('ramsis.sfm.worker.orm.Reservoir',
                              back_populates='samples')
