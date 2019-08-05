@@ -36,7 +36,6 @@ _install_requires = [
     'Flask>=0.12.2',
     'Flask-RESTful>=0.3.6',
     'Flask-SQLAlchemy>=2.3.2',
-    'GDAL==2.2.3',
     'geoalchemy2>=0.6.1',
     'marshmallow>=3.0.0rc8',
     'numpy==1.15',

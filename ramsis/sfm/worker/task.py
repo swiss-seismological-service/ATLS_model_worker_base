@@ -133,6 +133,7 @@ class Task(object):
         :param kwargs: Extra keyword value parameters passed to the
             :py:class:`ramsis.sfm.worker.utils.Model` instance, additionally.
         """
+        print('self, task args', self._task_args, kwargs)
         return self._model(**self._task_args, **kwargs)
 
     @with_exception_handling
@@ -177,14 +178,18 @@ class Task(object):
         session = create_session(db_engine)
         try:
             m_task = task_from_db(session, self.id)
+            self.logger.debug("m_task")
             m_task.status = retval.status
+            self.logger.debug("status")
             m_task.status_code = retval.status_code
+            self.logger.debug("debug")
             m_task.warning = retval.warning
-
+            print("warning", m_task.result, retval.data, self.id)
             if retval.status_code == 200:
-                m_task.result = (retval.data[self.id]
-                                 if self.id in retval.data else retval.data)
-
+                # (sarsonl) why is there assumed to be self.id in retval.data?
+                m_task.result = (retval.data[self.id]["reservoir"]
+                                 if self.id in retval.data else retval.data["reservoir"])
+            self.logger.debug("status code")
             session.commit()
 
         except NoResultFound as err:
