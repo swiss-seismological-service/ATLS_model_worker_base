@@ -64,7 +64,7 @@ _version = get_version(os.path.join('ramsis', 'sfm', 'worker', '__init__.py'))
 _description = ('RT-RAMSIS worker component.')
 _packages = ['ramsis.sfm.worker',
              'ramsis.sfm.worker.utils', ]
-
+_namespace_packages = ['ramsis']
 # ----------------------------------------------------------------------------
 setup(
     name=_name,
@@ -96,6 +96,7 @@ setup(
         'Topic :: Scientific/Engineering', ],
     platforms=['Linux', ],
     packages=_packages,
+    namespace_packages=_namespace_packages,
     data_files=_data_files,
     install_requires=_install_requires,
     extras_require=_extras_require,
