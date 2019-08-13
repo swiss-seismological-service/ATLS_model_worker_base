@@ -5,19 +5,29 @@ Parsing facilities for worker webservices.
 
 import base64
 
-from marshmallow import (fields, pre_load, post_load, validates_schema,
+from marshmallow import (fields, pre_load, post_load, validate, validates_schema,
                          ValidationError)
+
 from webargs.flaskparser import abort
 from webargs.flaskparser import parser as _parser
+from functools import partial
 
 from ramsis.sfm.worker.utils import (StatusCode, SchemaBase,
-                                     QuakeMLQuantitySchemaBase,
-                                     QuakeMLRealQuantitySchema,
+                                     Positive,
+                                     Percentage,
                                      validate_positive,
                                      validate_ph,
                                      validate_longitude,
                                      validate_latitude)
 
+
+Datetime = partial(fields.DateTime, format='%Y-%m-%dT%H:%M:%S')
+DatetimeRequired = partial(Datetime, required=True)
+Latitude = partial(fields.Float, validate=validate_latitude)
+RequiredLatitude = partial(Latitude, required=True)
+Longitude = partial(fields.Float, validate=validate_longitude)
+RequiredLongitude = partial(Longitude, required=True)
+FluidPh = partial(fields.Float, validate=validate_ph)
 
 
 class TupleField(fields.Field):
@@ -30,13 +40,6 @@ class TupleField(fields.Field):
         return tuple(
             field._deserialize(val, attr, data) for field, val in
             zip(self._entries, value))
-
-class QuakeMLTimeQuantitySchema(QuakeMLQuantitySchemaBase):
-    """
-    Schema representation of a `QuakeML <https://quake.ethz.ch/quakeml/>`_
-    TimeQuantity type.
-    """
-    value = fields.DateTime(format='iso')
 
 
 class SeismicCatalogSchema(SchemaBase):
@@ -62,23 +65,67 @@ class HydraulicSampleSchema(SchemaBase):
     """
     Schema representation for an hydraulic sample.
     """
-    datetime = fields.Nested(QuakeMLTimeQuantitySchema,
-                             required=True)
-    bottomtemperature = fields.Nested(
-        QuakeMLRealQuantitySchema(validate=validate_positive))
-    bottomflow = fields.Nested(QuakeMLRealQuantitySchema())
-    bottompressure = fields.Nested(QuakeMLRealQuantitySchema())
-    toptemperature = fields.Nested(
-        QuakeMLRealQuantitySchema(validate=validate_positive))
-    topflow = fields.Nested(QuakeMLRealQuantitySchema())
-    toppressure = fields.Nested(QuakeMLRealQuantitySchema())
-    fluiddensity = fields.Nested(
-        QuakeMLRealQuantitySchema(validate=validate_positive))
-    fluidviscosity = fields.Nested(
-        QuakeMLRealQuantitySchema(validate=validate_positive))
-    fluidph = fields.Nested(
-        QuakeMLRealQuantitySchema(validate=validate_ph))
     fluidcomposition = fields.String()
+
+    datetime_value = DatetimeRequired()
+    datetime_uncertainty = Positive()
+    datetime_loweruncertainty = Positive()
+    datetime_upperuncertainty = Positive()
+    datetime_confidencelevel = Percentage()
+
+    toptemperature_value = Positive()
+    toptemperature_uncertainty = Positive()
+    toptemperature_loweruncertainty = Positive()
+    toptemperature_upperuncertainty = Positive()
+    toptemperature_confidencelevel = Percentage()
+
+    bottomtemperature_value = Positive()
+    bottomtemperature_uncertainty = Positive()
+    bottomtemperature_loweruncertainty = Positive()
+    bottomtemperature_upperuncertainty = Positive()
+    bottomtemperature_confidencelevel = Percentage()
+
+    topflow_value = fields.Float()
+    topflow_uncertainty = Positive()
+    topflow_loweruncertainty = Positive()
+    topflow_upperuncertainty = Positive()
+    topflow_confidencelevel = Percentage()
+
+    bottomflow_value = fields.Float()
+    bottomflow_uncertainty = Positive()
+    bottomflow_loweruncertainty = Positive()
+    bottomflow_upperuncertainty = Positive()
+    bottomflow_confidencelevel = Percentage()
+
+    toppressure_value = Positive()
+    toppressure_uncertainty = Positive()
+    toppressure_loweruncertainty = Positive()
+    toppressure_upperuncertainty = Positive()
+    toppressure_confidencelevel = Percentage()
+
+    bottompressure_value = Positive()
+    bottompressure_uncertainty = Positive()
+    bottompressure_loweruncertainty = Positive()
+    bottompressure_upperuncertainty = Positive()
+    bottompressure_confidencelevel = Percentage()
+
+    fluiddensity_value = Positive()
+    fluiddensity_uncertainty = Positive()
+    fluiddensity_loweruncertainty = Positive()
+    fluiddensity_upperuncertainty = Positive()
+    fluiddensity_confidencelevel = Percentage()
+
+    fluidviscosity_value = Positive()
+    fluidviscosity_uncertainty = Positive()
+    fluidviscosity_loweruncertainty = Positive()
+    fluidviscosity_upperuncertainty = Positive()
+    fluidviscosity_confidencelevel = Percentage()
+
+    fluidph_value = FluidPh()
+    fluidph_uncertainty = Positive()
+    fluidph_loweruncertainty = Positive()
+    fluidph_upperuncertainty = Positive()
+    fluidph_confidencelevel = Percentage()
 
 
 class BoreholeSectionSchema(SchemaBase):
@@ -87,29 +134,53 @@ class BoreholeSectionSchema(SchemaBase):
     """
     starttime = fields.DateTime(format='iso')
     endtime = fields.DateTime(format='iso')
+    toplongitude_value = Longitude()
+    toplongitude_uncertainty = Positive()
+    toplongitude_loweruncertainty = Positive()
+    toplongitude_upperuncertainty = Positive()
+    toplongitude_confidencelevel = Percentage()
 
-    toplongitude = fields.Nested(
-        QuakeMLRealQuantitySchema(validate=validate_longitude),
-        required=True)
-    toplatitude = fields.Nested(
-        QuakeMLRealQuantitySchema(validate=validate_latitude),
-        required=True)
-    topdepth = fields.Nested(
-        QuakeMLRealQuantitySchema(validate=validate_positive),
-        required=True)
-    bottomlongitude = fields.Nested(
-        QuakeMLRealQuantitySchema(validate=validate_longitude),
-        required=True)
-    bottomlatitude = fields.Nested(
-        QuakeMLRealQuantitySchema(validate=validate_latitude),
-        required=True)
-    bottomdepth = fields.Nested(
-        QuakeMLRealQuantitySchema(validate=validate_positive),
-        required=True)
-    holediameter = fields.Nested(
-        QuakeMLRealQuantitySchema(validate=validate_positive))
-    casingdiameter = fields.Nested(
-        QuakeMLRealQuantitySchema(validate=validate_positive))
+    bottomlongitude_value = Longitude()
+    bottomlongitude_uncertainty = Positive()
+    bottomlongitude_loweruncertainty = Positive()
+    bottomlongitude_upperuncertainty = Positive()
+    bottomlongitude_confidencelevel = Percentage()
+
+    toplatitude_value = Latitude()
+    toplatitude_uncertainty = Positive()
+    toplatitude_loweruncertainty = Positive()
+    toplatitude_upperuncertainty = Positive()
+    toplatitude_confidencelevel = Percentage()
+
+    bottomlatitude_value = Latitude()
+    bottomlatitude_uncertainty = Positive()
+    bottomlatitude_loweruncertainty = Positive()
+    bottomlatitude_upperuncertainty = Positive()
+    bottomlatitude_confidencelevel = Percentage()
+
+    topdepth_value = Positive()
+    topdepth_uncertainty = Positive()
+    topdepth_loweruncertainty = Positive()
+    topdepth_upperuncertainty = Positive()
+    topdepth_confidencelevel = Percentage()
+
+    bottomdepth_value = Positive()
+    bottomdepth_uncertainty = Positive()
+    bottomdepth_loweruncertainty = Positive()
+    bottomdepth_upperuncertainty = Positive()
+    bottomdepth_confidencelevel = Percentage()
+
+    holediameter_value = Positive()
+    holediameter_uncertainty = Positive()
+    holediameter_loweruncertainty = Positive()
+    holediameter_upperuncertainty = Positive()
+    holediameter_confidencelevel = Percentage()
+
+    casingdiameter_value = Positive()
+    casingdiameter_uncertainty = Positive()
+    casingdiameter_loweruncertainty = Positive()
+    casingdiameter_upperuncertainty = Positive()
+    casingdiameter_confidencelevel = Percentage()
 
     topclosed = fields.Boolean()
     bottomclosed = fields.Boolean()
@@ -119,7 +190,7 @@ class BoreholeSectionSchema(SchemaBase):
 
     publicid = fields.String()
 
-    hydraulics = fields.Nested(HydraulicSampleSchema, many=True)
+    hydraulics = fields.Nested(HydraulicSampleSchema, many=True, required=True)
 
 
 class BoreholeSchema(SchemaBase):
@@ -129,8 +200,13 @@ class BoreholeSchema(SchemaBase):
     # XXX(damb): publicid is currently not required since we exclusively
     # support a single borehole.
     publicid = fields.String()
-    bedrockdepth = fields.Nested(
-        QuakeMLRealQuantitySchema(validate=validate_positive))
+
+    bedrockdepth_value = Positive()
+    bedrockdepth_uncertainty = Positive()
+    bedrockdepth_loweruncertainty = Positive()
+    bedrockdepth_upperuncertainty = Positive()
+    bedrockdepth_confidencelevel = Percentage()
+
 
     sections = fields.Nested(BoreholeSectionSchema, many=True, required=True)
 
@@ -162,8 +238,6 @@ class ModelParameterSchemaBase(SchemaBase):
     """
     Model parameter schema base class.
     """
-
-
     # dim-x, dim-y, dim-z in meters
     voxel_dimensions_m = TupleField(
         [fields.Float(required=True), fields.Float(required=True),
@@ -188,7 +262,6 @@ class ModelParameterSchemaBase(SchemaBase):
 
     # duration in seconds
     bin_duration = fields.Float()
-
 
 
 def create_sfm_worker_imessage_schema(

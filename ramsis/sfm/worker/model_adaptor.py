@@ -26,8 +26,8 @@ class InvalidConfiguration(ModelError):
 def with_exception_handling(func):
     """
     Method decorator catching unhandled
-    :py:class:`ramsis.sfm.worker.model.Model` exceptions. Exceptions are
-    wrapped into a valid result.
+    :py:class:`ramsis.sfm.worker.model_adaptor.ModelAdaptor` exceptions.
+    Exceptions are wrapped into a valid result.
     """
     @functools.wraps(func)
     def decorator(self, *args, **kwargs):
@@ -46,7 +46,7 @@ def with_exception_handling(func):
                 status_code=StatusCode.WorkerError.value,
                 data=({self.context['task']: msg}
                       if self.context and 'task' in self.context else msg),
-                warning='Caught in default model exception handler.')
+                warning=f'Caught in default model exception handler. {err}')
 
     return decorator
 

@@ -11,7 +11,7 @@ from osgeo import ogr
 from sqlalchemy import Column, Integer, Float, String, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declared_attr, declarative_base
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy.orm import relationship
 from sqlalchemy.types import TypeDecorator, CHAR
 
 from ramsis.sfm.worker.utils import StatusCode
@@ -88,10 +88,12 @@ class Task(LastSeenMixin, ORMBase):
 
     result = relationship("ramsis.sfm.worker.orm.Reservoir", uselist=False,
                           cascade="all, delete, delete-orphan",
-                          single_parent=True)
+                          single_parent=True,
+                          order_by='Reservoir.parent_ref')
 
     model = relationship("ramsis.sfm.worker.orm.Model",
-                         back_populates="tasks")
+                         back_populates="tasks",
+                         order_by='Model.name')
 
     @classmethod
     def new(cls, id, model):
@@ -129,18 +131,17 @@ class ModelResultSample(ORMBase):
     """
     starttime = Column(DateTime)
     endtime = Column(DateTime)
-    number_events_value = Column(Float, nullable=False)
-    number_events_uncertainty = Column(Float)
-    number_events_loweruncertainty = Column(Float)
-    number_events_upperuncertainty = Column(Float)
-    number_events_confidencelevel = Column(Float)
+    numberevents_value = Column(Float, nullable=False)
+    numberevents_uncertainty = Column(Float)
+    numberevents_loweruncertainty = Column(Float)
+    numberevents_upperuncertainty = Column(Float)
+    numberevents_confidencelevel = Column(Float)
 
-
-    hydraulic_vol_value = Column(Float, nullable=False)
-    hydraulic_vol_uncertainty = Column(Float)
-    hydraulic_vol_loweruncertainty = Column(Float)
-    hydraulic_vol_upperuncertainty = Column(Float)
-    hydraulic_vol_confidencelevel = Column(Float)
+    hydraulicvol_value = Column(Float, nullable=False)
+    hydraulicvol_uncertainty = Column(Float)
+    hydraulicvol_loweruncertainty = Column(Float)
+    hydraulicvol_upperuncertainty = Column(Float)
+    hydraulicvol_confidencelevel = Column(Float)
 
     b_value = Column(Float, nullable=False)
     b_uncertainty = Column(Float)
@@ -170,11 +171,12 @@ class Reservoir(LastSeenMixin, ORMBase):
     RAMSIS worker reservoir geometry ORM mapping.
     """
     parent_ref = Column(Integer, ForeignKey('reservoir.oid'))
-    geom = Column(Geometry(geometry_type='GEOMETRYZ', dimension=3),
-                  nullable=False)
+    geom = Column(Geometry(geometry_type='GEOMETRYZ', dimension=3,
+                  management=True), nullable=False)
 
     samples = relationship('ramsis.sfm.worker.orm.ModelResultSample',
-                           back_populates='reservoir')
+                           back_populates='reservoir',
+                           order_by='ModelResultSample.starttime')
 
     sub_geometries = relationship('ramsis.sfm.worker.orm.Reservoir')
 
