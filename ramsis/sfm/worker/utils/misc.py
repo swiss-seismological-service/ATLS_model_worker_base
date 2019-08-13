@@ -131,3 +131,11 @@ def merge_parameters(input_params, model_defaults, base_defaults):
     except AttributeError as err:
         raise ConfigError(err)
     return combined_params
+
+def load_spatialite(dbapi_conn, connection_record):
+    dbapi_conn.enable_load_extension(True)
+    dbapi_conn.load_extension('/usr/lib/x86_64-linux-gnu/mod_spatialite.so')
+
+def init_spatialite(dbapi_conn, connection_record):
+    load_spatialite(dbapi_conn, connection_record)
+    dbapi_conn.execute("SELECT InitSpatialMetaData()")

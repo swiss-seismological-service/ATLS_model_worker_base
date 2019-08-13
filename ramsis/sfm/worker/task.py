@@ -10,12 +10,13 @@ import uuid
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.event import listen
 
 from ramsis.utils.error import ErrorWithTraceback
 from ramsis.sfm.worker import orm
 from ramsis.sfm.worker.utils import (escape_newline, ContextLoggerAdapter,
                                      StatusCode)
-
+from ramsis.sfm.worker.utils.misc import load_spatialite
 
 # -----------------------------------------------------------------------------
 class TaskError(ErrorWithTraceback):
@@ -133,7 +134,6 @@ class Task(object):
         :param kwargs: Extra keyword value parameters passed to the
             :py:class:`ramsis.sfm.worker.utils.Model` instance, additionally.
         """
-        print('self, task args', self._task_args, kwargs)
         return self._model(**self._task_args, **kwargs)
 
     @with_exception_handling
@@ -148,6 +148,10 @@ class Task(object):
                 one()
 
         db_engine = create_engine(self._db_url)
+
+        if self._db_url.startswith('sqlite'):
+            listen(db_engine, 'connect', load_spatialite)
+
         session = create_session(db_engine)
         m_task_available = True
         # XXX(damb): fetch orm.Task from DB and update task state
@@ -178,18 +182,17 @@ class Task(object):
         session = create_session(db_engine)
         try:
             m_task = task_from_db(session, self.id)
-            self.logger.debug("m_task")
+
             m_task.status = retval.status
-            self.logger.debug("status")
+
             m_task.status_code = retval.status_code
-            self.logger.debug("debug")
+
             m_task.warning = retval.warning
-            print("warning", m_task.result, retval.data, self.id)
             if retval.status_code == 200:
                 # (sarsonl) why is there assumed to be self.id in retval.data?
                 m_task.result = (retval.data[self.id]["reservoir"]
                                  if self.id in retval.data else retval.data["reservoir"])
-            self.logger.debug("status code")
+
             session.commit()
 
         except NoResultFound as err:
@@ -199,7 +202,7 @@ class Task(object):
             session.rollback()
             raise err
         else:
-            self.logger.debug(f"Task successfully written.")
+            self.logger.info(f"Task successfully written.")
         finally:
             session.close()
 

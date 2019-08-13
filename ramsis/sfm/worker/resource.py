@@ -314,7 +314,7 @@ def create_sfmramsisworkerlistresource(processes=5):
             self.logger.debug(
                 f"Executing {self._model!r} task ({task_id}) "
                 f"with parameters {args!r} ...")
-            print('args', args)
+
             # create a task; inject model_default parameters
             t = Task(
                 model=self._model(context={'task': task_id},
