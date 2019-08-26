@@ -216,7 +216,6 @@ class ReservoirSchema(SchemaBase):
         Use the :code:`WKT` representation of the reservoir geometry instead of
         :code:`WKB`.
         """
-        print("res data:", data)
         try:
             data['geom'] = orig.wkt()
         except AttributeError:
