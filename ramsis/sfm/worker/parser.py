@@ -238,30 +238,19 @@ class ModelParameterSchemaBase(SchemaBase):
     """
     Model parameter schema base class.
     """
-    # dim-x, dim-y, dim-z in meters
-    voxel_dimensions_m = TupleField(
-        [fields.Float(required=True), fields.Float(required=True),
-         fields.Float(required=True)])
-    local_srs = fields.String()
-
-    # ----
     #XXX(damb): Forecast specific parameters
-    fc_datetime_start = fields.DateTime(format='iso', required=True)
-    fc_datetime_end = fields.DateTime(format='iso', required=True)
-    fc_increment_seconds = fields.Float()
-    fc_threshold_magnitude = fields.Float()
-
+    datetime_start = fields.DateTime(format='iso', required=True)
+    datetime_end = fields.DateTime(format='iso', required=True)
+    epoch_duration = fields.Float()
+    threshold_magnitude = fields.Float()
 
     # ----
     #XXX(damb): Training specific parameters
     # Leave blank, as the default config within em1_model will check the
     # hydraulic input and form training period on this
-    training_seconds = fields.Float()
+    training_epoch_duration = fields.Float()
     end_training = fields.DateTime()
     training_events_threshold = fields.Integer()
-
-    # duration in seconds
-    bin_duration = fields.Float()
 
 
 def create_sfm_worker_imessage_schema(
