@@ -21,7 +21,7 @@ from ramsis.sfm.worker.utils import (StatusCode, SchemaBase,
                                      validate_latitude)
 
 
-Datetime = partial(fields.DateTime, format='%Y-%m-%dT%H:%M:%S')
+Datetime = partial(fields.DateTime, format='%Y-%m-%dT%H:%M:%S.%f')
 DatetimeRequired = partial(Datetime, required=True)
 Latitude = partial(fields.Float, validate=validate_latitude)
 RequiredLatitude = partial(Latitude, required=True)
