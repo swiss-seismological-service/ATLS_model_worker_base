@@ -10,6 +10,7 @@ import uuid
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.pool import NullPool
 
 from ramsis.utils.error import ErrorWithTraceback
 from ramsis.sfm.worker import orm
@@ -84,10 +85,19 @@ class Task(object):
     :py:class:`ramsis.sfm.worker.utils.model.ModelResult`s are written to a
     database.
 
+    .. note::
+
+        In order to obtain DB access a :py:class:`Task` creates both a new DB
+        engine and session which are independent from the session handling
+        provided by
+        [FlaskSQLAlchemy](https://flask-sqlalchemy.palletsprojects.com/). This
+        approach simplifies how DB connections are handled when a task is
+        executed by means of a forked process.
+
+    :param str db_url: DB URL indicating the database dialect and connection
+        arguments
     :param model: :py:class:`ramsis.sfm.worker.utils.Model` instance to be run
     :type model: :py:class:`ramsis.sfm.worker.utils.Model`
-    :param db_session: Database session instance
-    :type db_session: :py:class:`sqlalchemy.orm.session.Session`
     :param task_id: Task identifier
     :type task_id: :py:class:`ùuid.UUID`
     :param kwargs: Keyword value parameters used when running the
@@ -96,12 +106,12 @@ class Task(object):
 
     LOGGER = 'ramsis.sfm.worker.task'
 
-    def __init__(self, model, db_url, task_id=None, **kwargs):
+    def __init__(self, db_url, model, task_id=None, **kwargs):
         self._logger = logging.getLogger(self.LOGGER)
         self.logger = ContextLoggerAdapter(self._logger, {'ctx': task_id})
 
-        self._model = model
         self._db_url = db_url
+        self._model = model
         self._task_id = task_id if task_id is not None else uuid.uuid4()
         self._task_args = kwargs
 
@@ -138,16 +148,15 @@ class Task(object):
     @with_exception_handling
     def __call__(self, **kwargs):
 
-        def create_session(db_engine):
-            return sessionmaker(bind=db_engine)()
+        engine = create_engine(self._db_url, poolclass=NullPool)
+        Session = sessionmaker(bind=engine)
 
         def task_from_db(session, task_id):
             return session.query(orm.Task).\
                 filter(orm.Task.id == task_id).\
                 one()
 
-        db_engine = create_engine(self._db_url)
-        session = create_session(db_engine)
+        session = Session()
         m_task_available = True
         # XXX(damb): fetch orm.Task from DB and update task state
         try:
@@ -172,9 +181,8 @@ class Task(object):
 
         retval = self._run(**kwargs)
 
-        self.logger.debug(
-            f"Writing results to DB (db_url={self._db_url}) ...")
-        session = create_session(db_engine)
+        self.logger.debug(f"Writing results to DB ...")
+        session = Session()
         try:
             m_task = task_from_db(session, self.id)
             m_task.status = retval.status
