@@ -119,22 +119,6 @@ class Task(object):
     def id(self):
         return self._task_id
 
-    def __getstate__(self):
-        # prevent pickling errors for loggers
-        d = dict(self.__dict__)
-        if '_logger' in d.keys():
-            d['_logger'] = d['_logger'].name
-        if 'logger' in d.keys():
-            del d['logger']
-        return d
-
-    def __setstate__(self, d):
-        if '_logger' in d.keys():
-            d['_logger'] = logging.getLogger(d['_logger'])
-            d['logger'] = ContextLoggerAdapter(d['_logger'],
-                                               {'ctx': d['_task_id']})
-            self.__dict__.update(d)
-
     @with_logging
     def _run(self, **kwargs):
         """
