@@ -132,8 +132,8 @@ class BoreholeSectionSchema(SchemaBase):
     """
     Schema representation of a borehole section.
     """
-    starttime = fields.DateTime(format='iso')
-    endtime = fields.DateTime(format='iso')
+    starttime = Datetime()
+    endtime = Datetime()
     toplongitude_value = Longitude()
     toplongitude_uncertainty = Positive()
     toplongitude_loweruncertainty = Positive()
@@ -239,8 +239,8 @@ class ModelParameterSchemaBase(SchemaBase):
     Model parameter schema base class.
     """
     #XXX(damb): Forecast specific parameters
-    datetime_start = fields.DateTime(format='iso', required=True)
-    datetime_end = fields.DateTime(format='iso', required=True)
+    datetime_start = DatetimeRequired()
+    datetime_end = DatetimeRequired()
     epoch_duration = fields.Float()
     threshold_magnitude = fields.Float()
 
@@ -249,7 +249,7 @@ class ModelParameterSchemaBase(SchemaBase):
     # Leave blank, as the default config within em1_model will check the
     # hydraulic input and form training period on this
     training_epoch_duration = fields.Float()
-    end_training = fields.DateTime()
+    end_training = Datetime()
     training_events_threshold = fields.Integer()
 
 
