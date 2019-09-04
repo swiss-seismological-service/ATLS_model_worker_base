@@ -15,7 +15,7 @@ from flask_restful import Resource
 from sqlalchemy.orm.exc import NoResultFound
 
 from ramsis.sfm.worker import orm
-from ramsis.sfm.worker.parser import parser#, SFMWorkerIMessageSchema
+from ramsis.sfm.worker.parser import parser, SFMWorkerIMessageSchema
 from ramsis.sfm.worker.task import Task
 from ramsis.sfm.worker.utils import (StatusCode, SFMWorkerOMessageSchema,
                                      ResponseData)
@@ -346,7 +346,7 @@ def create_sfmramsisworkerlistresource(processes=5):
             schema allows the validation of the :code:`model_parameters`
             property.
             """
-            return parser.parse(model_parameters_schema(), request,
+            return parser.parse(SFMWorkerIMessageSchema(), request,
                                 locations=locations)
 
     return SFMRamsisWorkerListResource
