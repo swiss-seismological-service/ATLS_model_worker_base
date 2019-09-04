@@ -293,7 +293,7 @@ def create_sfm_worker_imessage_schema(
     return _SFMWorkerIMessageSchema
 
 
-SFMWorkerIMessageSchema = create_sfm_worker_imessage_schema(model_parameters_schema=ModelParameterSchemaBase)
+SFMWorkerIMessageSchema = create_sfm_worker_imessage_schema()
 
 
 @_parser.error_handler
