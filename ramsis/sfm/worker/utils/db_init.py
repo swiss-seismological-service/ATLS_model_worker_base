@@ -6,23 +6,15 @@ Initialize a RT-RAMSIS worker DB.
 import sys
 import traceback
 
-from sqlalchemy import create_engine, MetaData
-from sqlalchemy.event import listen
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine
 
 from ramsis.utils.app import CustomParser, App, AppError
 from ramsis.utils.error import Error, ExitCode
-from ramsis.sfm.worker import orm
+from ramsis.sfm.worker import settings, orm
 from ramsis.sfm.worker.utils import url
-from ramsis.sfm.em1.core.parser import default_params
-from ramsis.sfm.worker.utils.misc import init_spatialite
 
 __version__ = '0.1'
 
-def load_spatialite(dbapi_conn, connection_record):
-    dbapi_conn.enable_load_extension(True)
-    dbapi_conn.load_extension('/usr/lib/x86_64-linux-gnu/mod_spatialite.so')
-    dbapi_conn.execute("SELECT InitSpatialMetaData()")
 
 # ----------------------------------------------------------------------------
 class DBInitApp(App):
@@ -63,18 +55,15 @@ class DBInitApp(App):
         exit_code = ExitCode.EXIT_SUCCESS
         try:
             engine = create_engine(self.args.db_url)
-            
-            if self.args.db_url.startswith('sqlite'):
-                listen(engine, 'connect', init_spatialite)
 
             if self.args.force:
                 self.logger.debug(
                     'Force mode enabled. Drop existing DB model.')
-                orm.ORMBase.metadata.drop_all(bind=engine)
+                orm.ORMBase.metadata.drop_all(engine)
 
             # create db tables
             self.logger.debug('Creating database tables ...')
-            orm.ORMBase.metadata.create_all(bind=engine)
+            orm.ORMBase.metadata.create_all(engine)
 
             self.logger.info(
                 "DB '{}' successfully initialized.".format(self.args.db_url))
@@ -100,12 +89,12 @@ def main():
     """
 
     app = DBInitApp(log_id='RAMSIS')
-    defaults = default_params('ws_params')
-            
+
     try:
         app.configure(
-            defaults['PATH_RAMSIS_WORKER_CONFIG'],
-            positional_required_args=['db_url'])
+            settings.PATH_RAMSIS_WORKER_CONFIG,
+            positional_required_args=['db_url'],
+            config_section=settings.RAMSIS_WORKER_DB_CONFIG_SECTION)
     except AppError as err:
         # handle errors during the application configuration
         print('ERROR: Application configuration failed "%s".' % err,

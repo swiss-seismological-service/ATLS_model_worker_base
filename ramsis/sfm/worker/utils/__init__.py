@@ -9,7 +9,7 @@ import functools
 import logging
 import pkg_resources
 
-from marshmallow import Schema, fields, post_dump, validate, pre_load
+from marshmallow import Schema, fields, post_dump, validate
 
 
 def get_version(namespace_pkg_name=None):
@@ -96,72 +96,38 @@ Percentage = functools.partial(fields.Float, validate=validate_percentage)
 
 class SchemaBase(Schema):
 
+    @classmethod
+    def _clear_missing(cls, data):
+        retval = data.copy()
+        for key in filter(lambda key: data[key] is None, data):
+            del retval[key]
+        return retval
+
     class Meta:
         strict = True
-        ordered = True
-
-    @classmethod
-    def remove_empty(self, data):
-        """
-        Filter out fields with empty (e.g. :code:`None`, :code:`[], etc.)
-        values.
-        """
-        return {k: v for k, v in data.items() if v or isinstance(v, (int, float))}
-
-    @classmethod
-    def _flatten_dict(cls, data, sep='_'):
-        """
-        Flatten a a nested dict :code:`dict` using :code:`sep` as key
-        separator.
-        """
-        retval = {}
-        for k, v in data.items():
-
-            if isinstance(v, dict):
-                sub_k = list(v.keys())[0]
-                if sub_k in ['value', 'uncertainty', 'upperuncertainty',
-                         'loweruncertainty', 'confidencelevel']:
-                    for sub_k, sub_v in cls._flatten_dict(v, sep).items():
-                        retval[k + sep + sub_k] = sub_v
-                else:
-                    retval[k] = v
-            else:
-                retval[k] = v
-
-        return retval
-
-    @classmethod
-    def _nest_dict(cls, data, sep='_'):
-        """
-        Nest a dictionary by splitting the key on a delimiter.
-        """
-        retval = {}
-        for k, v in data.items():
-            t = retval
-            prev = None
-            if k in ['status_code']:
-                t.setdefault(k, v)
-                continue
-            for part in k.split(sep):
-                if prev is not None:
-                    t = t.setdefault(prev, {})
-                prev = part
-            else:
-                t.setdefault(prev, v)
-
-        return retval
 
 
-    @post_dump
-    def postdump(self, data, **kwargs):
-        filtered_data = self.remove_empty(data)
-        nested_data = self._nest_dict(filtered_data, sep='_')
-        return nested_data
+class QuakeMLQuantitySchemaBase(SchemaBase):
+    uncertainty = Positive()
+    loweruncertainty = Positive()
+    upperuncertainty = Positive()
+    confidencelevel = Percentage()
 
-    @pre_load
-    def preload(self, data, **kwargs):
-        flattened_data = self._flatten_dict( data, sep='_')
-        return flattened_data
+
+def QuakeMLRealQuantitySchema(validate=None):
+    """
+    Factory function for a `QuakeML <https://quake.ethz.ch/quakeml/>`_
+    RealQuantity type.
+    """
+
+    class _QuakeMLRealQuantitySchema(QuakeMLQuantitySchemaBase):
+        value = fields.Float(validate=validate)
+
+        @post_dump
+        def clear_missing(self, data, **kwargs):
+            return self._clear_missing(data)
+
+    return _QuakeMLRealQuantitySchema
 
 
 class ModelResultSampleSchema(SchemaBase):
@@ -170,35 +136,8 @@ class ModelResultSampleSchema(SchemaBase):
     """
     starttime = fields.DateTime(format='iso')
     endtime = fields.DateTime(format='iso')
-    numberevents_value = fields.Int(required=True)
-    numberevents_uncertainty = Positive()
-    numberevents_loweruncertainty = Positive()
-    numberevents_upperuncertainty = Positive()
-    numberevents_confidencelevel = Percentage()
-
-    hydraulicvol_value = fields.Float(required=True)
-    hydraulicvol_uncertainty = Positive()
-    hydraulicvol_loweruncertainty = Positive()
-    hydraulicvol_upperuncertainty = Positive()
-    hydraulicvol_confidencelevel = Percentage()
-
-    b_value = fields.Float(required=True)
-    b_uncertainty = Positive()
-    b_loweruncertainty = Positive()
-    b_upperuncertainty = Positive()
-    b_confidencelevel = Percentage()
-
-    a_value = fields.Float(required=True)
-    a_uncertainty = Positive()
-    a_loweruncertainty = Positive()
-    a_upperuncertainty = Positive()
-    a_confidencelevel = Percentage()
-
-    mc_value = fields.Float(required=True)
-    mc_uncertainty = Positive()
-    mc_loweruncertainty = Positive()
-    mc_upperuncertainty = Positive()
-    mc_confidencelevel = Percentage()
+    rate = fields.Nested(QuakeMLRealQuantitySchema())
+    b = fields.Nested(QuakeMLRealQuantitySchema())
 
 
 class ReservoirSchema(SchemaBase):
@@ -233,6 +172,10 @@ class SFMWorkerResponseDataAttributesSchema(SchemaBase):
     forecast = fields.Nested(ReservoirSchema)
     warning = fields.Str()
 
+    @post_dump
+    def clear_missing(self, data, **kwargs):
+        return self._clear_missing(data)
+
 
 class SFMWorkerResponseDataSchema(SchemaBase):
     """
@@ -240,6 +183,10 @@ class SFMWorkerResponseDataSchema(SchemaBase):
     """
     id = fields.UUID()
     attributes = fields.Nested(SFMWorkerResponseDataAttributesSchema)
+
+    @post_dump
+    def clear_missing(self, data, **kwargs):
+        return self._clear_missing(data)
 
 
 class SFMWorkerOMessageSchema(SchemaBase):
@@ -250,6 +197,10 @@ class SFMWorkerOMessageSchema(SchemaBase):
     data = fields.Method("_serialize_data")
     errors = fields.Dict()
     meta = fields.Dict()
+
+    @post_dump
+    def clear_missing(self, data, **kwargs):
+        return self._clear_missing(data)
 
     def _serialize_data(self, obj):
         if 'data' in obj:
