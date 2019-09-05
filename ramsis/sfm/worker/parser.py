@@ -5,7 +5,7 @@ Parsing facilities for worker webservices.
 
 import base64
 
-from marshmallow import (fields, pre_load, post_load, validate, validates_schema,
+from marshmallow import (fields, pre_load, validates_schema,
                          ValidationError)
 
 from webargs.flaskparser import abort
@@ -15,7 +15,6 @@ from functools import partial
 from ramsis.sfm.worker.utils import (StatusCode, SchemaBase,
                                      Positive,
                                      Percentage,
-                                     validate_positive,
                                      validate_ph,
                                      validate_longitude,
                                      validate_latitude)
@@ -207,7 +206,6 @@ class BoreholeSchema(SchemaBase):
     bedrockdepth_upperuncertainty = Positive()
     bedrockdepth_confidencelevel = Percentage()
 
-
     sections = fields.Nested(BoreholeSectionSchema, many=True, required=True)
 
     @validates_schema
@@ -238,19 +236,10 @@ class ModelParameterSchemaBase(SchemaBase):
     """
     Model parameter schema base class.
     """
-    #XXX(damb): Forecast specific parameters
+    # XXX(damb): Forecast specific parameters
     datetime_start = DatetimeRequired()
     datetime_end = DatetimeRequired()
     epoch_duration = fields.Float()
-    threshold_magnitude = fields.Float()
-
-    # ----
-    #XXX(damb): Training specific parameters
-    # Leave blank, as the default config within em1_model will check the
-    # hydraulic input and form training period on this
-    training_epoch_duration = fields.Float()
-    end_training = Datetime()
-    training_events_threshold = fields.Integer()
 
 
 def create_sfm_worker_imessage_schema(

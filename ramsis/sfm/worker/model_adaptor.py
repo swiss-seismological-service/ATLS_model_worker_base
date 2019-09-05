@@ -73,11 +73,11 @@ class ModelResult(namedtuple('ModelResult',
 # -----------------------------------------------------------------------------
 class ModelAdaptor(object):
     """
-    RT-RAMSIS :py:class:`Model` base class.
+    RT-RAMSIS :py:class:`ModelAdaptor` base class.
     """
-    LOGGER = 'ramsis.sfm.worker.model'
-    NAME = 'MODEL'
-    DESCRIPTION = ''
+    LOGGER = 'ramsis.sfm.worker.model_adaptor'
+    NAME = 'MODELADAPTOR'
+    DESCRIPTION = 'Adaptor for interacting with model.'
 
     def __init__(self, name=None, context={}):
         self.context = context

@@ -16,9 +16,8 @@ from ramsis.utils.error import ErrorWithTraceback
 from ramsis.sfm.worker import orm
 from ramsis.sfm.worker.utils import (escape_newline, ContextLoggerAdapter,
                                      StatusCode)
-from ramsis.sfm.worker.utils.misc import load_spatialite
 
-# -----------------------------------------------------------------------------
+
 class TaskError(ErrorWithTraceback):
     """Base task error ({})."""
 
@@ -179,7 +178,8 @@ class Task(object):
             if retval.status_code == 200:
                 # (sarsonl) why is there assumed to be self.id in retval.data?
                 m_task.result = (retval.data[self.id]["reservoir"]
-                                 if self.id in retval.data else retval.data["reservoir"])
+                                 if self.id in retval.data
+                                 else retval.data["reservoir"])
 
             session.commit()
 
@@ -190,7 +190,7 @@ class Task(object):
             session.rollback()
             raise err
         else:
-            self.logger.info(f"Task successfully written.")
+            self.logger.info("Task successfully written.")
         finally:
             session.close()
 

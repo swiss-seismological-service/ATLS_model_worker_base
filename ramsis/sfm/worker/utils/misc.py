@@ -4,12 +4,11 @@ Extensions for miscellaneous entities.
 """
 
 import warnings
-import copy
+from osgeo import ogr, osr
+from pyproj import Proj, transform as _transform
 
 from ramsis.utils.error import ErrorWithTraceback
 
-from osgeo import ogr, osr
-from pyproj import Proj, transform as _transform
 
 # DEFAULT_PROJ = '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs'
 DEFAULT_PROJ = ''
@@ -104,38 +103,3 @@ class CoordinateMixin(object):
                 'Projection currently not taken into consideration.')
         # TODO(damb): Take the projection into consideration.
         return 'POINT Z (%f %f %f)' % self._x, self._y, self._z
-
-    def __repr__(self):
-        return '<CoordinateMixin(x=%s, y=%s, z=%s)>' % (
-            self._x, self._y, self._z)
-
-def derived_dict(base, override):
-    newdict = copy.deepcopy(base)
-    for k, v in override.items():
-        newvalue = v
-        if isinstance(v, dict):
-            try:
-                base_value = newdict[k]
-            except KeyError:
-                pass
-            else:
-                if isinstance(base_value, dict):
-                    newvalue = derived_dict(base_value, v)
-        newdict[k] = newvalue
-    return newdict
-
-def merge_parameters(input_params, model_defaults, base_defaults):
-    try:
-        combined_defaults = derived_dict(base_defaults, model_defaults)
-        combined_params = derived_dict(combined_defaults, input_params)
-    except AttributeError as err:
-        raise ConfigError(err)
-    return combined_params
-
-def load_spatialite(dbapi_conn, connection_record):
-    dbapi_conn.enable_load_extension(True)
-    dbapi_conn.load_extension('/usr/lib/x86_64-linux-gnu/mod_spatialite.so')
-
-def init_spatialite(dbapi_conn, connection_record):
-    load_spatialite(dbapi_conn, connection_record)
-    dbapi_conn.execute("SELECT InitSpatialMetaData()")
