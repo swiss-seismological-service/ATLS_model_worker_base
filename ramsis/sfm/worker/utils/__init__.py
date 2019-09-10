@@ -8,6 +8,7 @@ import enum
 import functools
 import logging
 import pkg_resources
+from numpy import isnan
 
 from marshmallow import Schema, fields, post_dump, validate, pre_load
 
@@ -200,6 +201,15 @@ class ModelResultSampleSchema(SchemaBase):
     mc_upperuncertainty = Positive()
     mc_confidencelevel = Percentage()
 
+    @post_dump
+    def postdump(self, data, **kwargs):
+        return_data = {}
+        # Do not return samples with NaN numberevents
+        if not isnan(data["numberevents_value"]):
+            filtered_data = self.remove_empty(data)
+            return_data = self._nest_dict(filtered_data, sep='_')
+        return return_data
+
 
 class ReservoirSchema(SchemaBase):
     """
@@ -216,6 +226,7 @@ class ReservoirSchema(SchemaBase):
         Use the :code:`WKT` representation of the reservoir geometry instead of
         :code:`WKB`.
         """
+        data["samples"] = [v for v in data["samples"] if v]
         try:
             data['geom'] = orig.wkt()
         except AttributeError:
