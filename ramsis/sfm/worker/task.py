@@ -126,7 +126,7 @@ class Task(object):
         :param kwargs: Extra keyword value parameters passed to the
             :py:class:`ramsis.sfm.worker.utils.Model` instance, additionally.
         """
-        return self._model(self.id, *self._task_args, **kwargs)
+        return self._model(**self._task_args, **kwargs)
 
     @with_exception_handling
     def __call__(self, **kwargs):
