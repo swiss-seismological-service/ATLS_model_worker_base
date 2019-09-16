@@ -20,6 +20,8 @@ from ramsis.sfm.worker.utils import (StatusCode, SchemaBase,
                                      validate_latitude)
 
 
+DatetimeRequiredIso = partial(fields.DateTime, format='%Y-%m-%dT%H:%M:%S',
+                              required=True)
 Datetime = partial(fields.DateTime, format='%Y-%m-%dT%H:%M:%S.%f')
 DatetimeRequired = partial(Datetime, required=True)
 Latitude = partial(fields.Float, validate=validate_latitude)
@@ -237,8 +239,8 @@ class ModelParameterSchemaBase(SchemaBase):
     Model parameter schema base class.
     """
     # XXX(damb): Forecast specific parameters
-    datetime_start = DatetimeRequired()
-    datetime_end = DatetimeRequired()
+    datetime_start = DatetimeRequiredIso()
+    datetime_end = DatetimeRequiredIso()
     epoch_duration = fields.Float()
 
 
