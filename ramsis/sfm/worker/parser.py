@@ -4,10 +4,11 @@ Parsing facilities for worker webservices.
 """
 
 import base64
-
+import re
+import datetime
 from marshmallow import (fields, pre_load, validates_schema,
-                         ValidationError)
-
+                         ValidationError, utils)
+import dateutil.parser
 from webargs.flaskparser import abort
 from webargs.flaskparser import parser as _parser
 from functools import partial
@@ -20,15 +21,73 @@ from ramsis.sfm.worker.utils import (StatusCode, SchemaBase,
                                      validate_latitude)
 
 
-DatetimeRequiredIso = partial(fields.DateTime, format='%Y-%m-%dT%H:%M:%S',
-                              required=True)
-Datetime = partial(fields.DateTime, format='%Y-%m-%dT%H:%M:%S.%f')
-DatetimeRequired = partial(Datetime, required=True)
 Latitude = partial(fields.Float, validate=validate_latitude)
 RequiredLatitude = partial(Latitude, required=True)
 Longitude = partial(fields.Float, validate=validate_longitude)
 RequiredLongitude = partial(Longitude, required=True)
 FluidPh = partial(fields.Float, validate=validate_ph)
+
+
+# from marshmallow (originally from Django)
+_iso8601_re = re.compile(
+    r'(?P<year>\d{4})-(?P<month>\d{1,2})-(?P<day>\d{1,2})'
+    r'[T ](?P<hour>\d{1,2}):(?P<minute>\d{1,2})'
+    r'(?::(?P<second>\d{1,2})(?:\.(?P<microsecond>\d{1,6})\d{0,6})?)?'
+    # tzinfo must not be available
+    r'(?P<tzinfo>(?!\Z|[+-]\d{2}(?::?\d{2})?))?$'
+)
+
+
+def datetime_to_isoformat(dt, localtime=False, *args, **kwargs):
+    """
+    Convert a :py:class:`datetime.datetime` object to a ISO8601 conform string.
+    :param datetime.datetime dt: Datetime object to be converted
+    :param bool localtime: The parameter is ignored
+    :returns: ISO8601 conform datetime string
+    :rtype: str
+    """
+    # ignores localtime parameter
+    return dt.isoformat(*args, **kwargs)
+
+
+def string_to_datetime(datestring, use_dateutil=True):
+    """
+    Parse a datestring from a string specified by the FDSNWS datetime
+    specification.
+    :param str datestring: String to be parsed
+    :param bool use_dateutil: Make use of the :code:`dateutil` package if set
+        to :code:`True`
+    :returns: Datetime
+    :rtype: :py:class:`datetime.datetime`
+    See: http://www.fdsn.org/webservices/FDSN-WS-Specifications-1.1.pdf
+    """
+    IGNORE_TZ = True
+
+    if len(datestring) == 10:
+        # only YYYY-mm-dd is defined
+        return datetime.datetime.combine(utils.from_iso_date(datestring,
+                                         use_dateutil), datetime.time())
+    else:
+        if not _iso8601_re.match(datestring):
+            raise ValueError('Not a valid ISO8601-formatted string.')
+        return dateutil.parser.parse(datestring, ignoretz=IGNORE_TZ)
+
+
+class UTCDateTime(fields.DateTime):
+    """
+    The class extends marshmallow standard DateTime with a FDSNWS *datetime*
+    format.
+    The FDSNWS *datetime* format is described in the `FDSN Web Service
+    Specifications
+    <http://www.fdsn.org/webservices/FDSN-WS-Specifications-1.1.pdf>`_.
+    """
+
+    SERIALIZATION_FUNCS = fields.DateTime.SERIALIZATION_FUNCS.copy()
+
+    DESERIALIZATION_FUNCS = fields.DateTime.DESERIALIZATION_FUNCS.copy()
+
+    SERIALIZATION_FUNCS['utc_isoformat'] = datetime_to_isoformat
+    DESERIALIZATION_FUNCS['utc_isoformat'] = string_to_datetime
 
 
 class TupleField(fields.Field):
@@ -68,7 +127,7 @@ class HydraulicSampleSchema(SchemaBase):
     """
     fluidcomposition = fields.String()
 
-    datetime_value = DatetimeRequired()
+    datetime_value = UTCDateTime("utc_isoformat", required=True)
     datetime_uncertainty = Positive()
     datetime_loweruncertainty = Positive()
     datetime_upperuncertainty = Positive()
@@ -133,8 +192,8 @@ class BoreholeSectionSchema(SchemaBase):
     """
     Schema representation of a borehole section.
     """
-    starttime = Datetime()
-    endtime = Datetime()
+    starttime = UTCDateTime('utc_isoformat')
+    endtime = UTCDateTime('utc_isoformat')
     toplongitude_value = Longitude()
     toplongitude_uncertainty = Positive()
     toplongitude_loweruncertainty = Positive()
@@ -239,8 +298,8 @@ class ModelParameterSchemaBase(SchemaBase):
     Model parameter schema base class.
     """
     # XXX(damb): Forecast specific parameters
-    datetime_start = DatetimeRequiredIso()
-    datetime_end = DatetimeRequiredIso()
+    datetime_start = UTCDateTime('utc_isoformat', required=True)
+    datetime_end = UTCDateTime('utc_isoformat', required=True)
     epoch_duration = fields.Float()
 
 
