@@ -79,7 +79,7 @@ class ModelAdaptor(object):
     NAME = 'MODELADAPTOR'
     DESCRIPTION = 'Adaptor for interacting with model.'
 
-    def __init__(self, name=None, context={}):
+    def __init__(self, name=None, context={}, **kwargs):
         self.context = context
 
         self._name = name if name else self.NAME
@@ -148,6 +148,5 @@ class ModelAdaptor(object):
                 if d['context'] and 'task' in d['context']
                 else {'ctx': d['_name']})
             self.__dict__.update(d)
-
     def __repr__(self):
         return '<{}(name={})>'.format(type(self).__name__, self.NAME)
