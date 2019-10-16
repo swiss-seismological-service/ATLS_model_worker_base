@@ -176,11 +176,7 @@ class Task(object):
 
             m_task.warning = retval.warning
             if retval.status_code == 200:
-                # (sarsonl) why is there assumed to be self.id in retval.data?
-                m_task.result = (retval.data[self.id]["reservoir"]
-                                 if self.id in retval.data
-                                 else retval.data["reservoir"])
-
+                m_task.result = retval.data.get("reservoir")
             session.commit()
 
         except NoResultFound as err:
