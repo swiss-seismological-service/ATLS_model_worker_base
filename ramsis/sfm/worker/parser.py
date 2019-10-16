@@ -267,6 +267,12 @@ class BoreholeSchema(SchemaBase):
     bedrockdepth_upperuncertainty = Positive()
     bedrockdepth_confidencelevel = Percentage()
 
+    altitude_value = fields.Float()
+    altitude_uncertainty = Positive()
+    altitude_loweruncertainty = Positive()
+    altitude_upperuncertainty = Positive()
+    altitude_confidencelevel = Percentage()
+
     sections = fields.Nested(BoreholeSectionSchema, many=True, required=True)
 
     @validates_schema
