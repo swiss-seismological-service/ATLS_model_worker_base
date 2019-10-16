@@ -37,7 +37,7 @@ _install_requires = [
     'Flask-RESTful>=0.3.6',
     'Flask-SQLAlchemy>=2.3.2',
     'geoalchemy2>=0.6.1',
-    'marshmallow>=3.0.0rc8',
+    'marshmallow>=3.2.1',
     'numpy==1.15',
     'python-dateutil>=2.8.0',
     "ramsis.utils==0.1",
@@ -65,7 +65,7 @@ _version = get_version(os.path.join('ramsis', 'sfm', 'worker', '__init__.py'))
 _description = ('RT-RAMSIS worker component.')
 _packages = ['ramsis.sfm.worker',
              'ramsis.sfm.worker.utils', ]
-_namespace_packages = ['ramsis']
+_namespace_packages = ['ramsis', 'ramsis.sfm']
 # ----------------------------------------------------------------------------
 setup(
     name=_name,
