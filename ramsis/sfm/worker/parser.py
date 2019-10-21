@@ -188,6 +188,10 @@ class HydraulicSampleSchema(SchemaBase):
     fluidph_confidencelevel = Percentage()
 
 
+class HydraulicSampleScenarioSchema(HydraulicSampleSchema):
+    pass
+
+
 class BoreholeSectionSchema(SchemaBase):
     """
     Schema representation of a borehole section.
@@ -253,6 +257,11 @@ class BoreholeSectionSchema(SchemaBase):
     hydraulics = fields.Nested(HydraulicSampleSchema, many=True, required=True)
 
 
+class BoreholeSectionScenarioSchema(BoreholeSectionSchema):
+    hydraulics = fields.Nested(HydraulicSampleScenarioSchema, many=True,
+                               required=True)
+
+
 class BoreholeSchema(SchemaBase):
     """
     Schema representation for a borehole.
@@ -282,13 +291,19 @@ class BoreholeSchema(SchemaBase):
                 'InjectionWells are required to have a single section.')
 
 
+class BoreholeScenarioSchema(BoreholeSchema):
+
+    sections = fields.Nested(BoreholeSectionScenarioSchema, many=True,
+                             required=True)
+
+
 class ScenarioSchema(SchemaBase):
     """
     Schema representation for a scenario to be forecasted.
     """
     # XXX(damb): Borehole scenario for both the related geometry and the
     # injection plan.
-    well = fields.Nested(BoreholeSchema, required=True)
+    well = fields.Nested(BoreholeScenarioSchema, required=True)
 
 
 class ReservoirSchema(SchemaBase):
