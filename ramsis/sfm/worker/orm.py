@@ -11,7 +11,7 @@ from osgeo import ogr
 from sqlalchemy import Column, Integer, Float, String, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declared_attr, declarative_base
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy.orm import relationship
 from sqlalchemy.types import TypeDecorator, CHAR
 
 from ramsis.sfm.worker.utils import StatusCode
@@ -88,10 +88,12 @@ class Task(LastSeenMixin, ORMBase):
 
     result = relationship("ramsis.sfm.worker.orm.Reservoir", uselist=False,
                           cascade="all, delete, delete-orphan",
-                          single_parent=True)
+                          single_parent=True,
+                          order_by='Reservoir.parent_ref')
 
     model = relationship("ramsis.sfm.worker.orm.Model",
-                         back_populates="tasks")
+                         back_populates="tasks",
+                         order_by='Model.name')
 
     @classmethod
     def new(cls, id, model):
@@ -123,34 +125,41 @@ class Model(ORMBase):
         return "<{}(name={})>".format(type(self).__name__, self.name)
 
 
-class RealQuantity(ORMBase):
-    """
-    ORM mapping representing a :py:code:`QuakeMLRealQuantity`.
-    """
-    value = Column(Float, nullable=False)
-    uncertainty = Column(Float)
-    loweruncertainty = Column(Float)
-    upperuncertainty = Column(Float)
-    confidencelevel = Column(Float)
-
-
 class ModelResultSample(ORMBase):
     """
     ORM mapping representing a single sample of a model result.
     """
     starttime = Column(DateTime)
     endtime = Column(DateTime)
-    rate_id = Column(Integer, ForeignKey('realquantity.oid'))
-    rate = relationship('ramsis.sfm.worker.orm.RealQuantity',
-                        backref=backref('_modelresultsample_rate',
-                                        uselist=False),
-                        foreign_keys=[rate_id])
+    numberevents_value = Column(Float, nullable=False)
+    numberevents_uncertainty = Column(Float)
+    numberevents_loweruncertainty = Column(Float)
+    numberevents_upperuncertainty = Column(Float)
+    numberevents_confidencelevel = Column(Float)
 
-    b_id = Column(Integer, ForeignKey('realquantity.oid'))
-    b = relationship('ramsis.sfm.worker.orm.RealQuantity',
-                     backref=backref('_modelresultsample_b',
-                                     uselist=False),
-                     foreign_keys=[b_id])
+    hydraulicvol_value = Column(Float, nullable=False)
+    hydraulicvol_uncertainty = Column(Float)
+    hydraulicvol_loweruncertainty = Column(Float)
+    hydraulicvol_upperuncertainty = Column(Float)
+    hydraulicvol_confidencelevel = Column(Float)
+
+    b_value = Column(Float, nullable=False)
+    b_uncertainty = Column(Float)
+    b_loweruncertainty = Column(Float)
+    b_upperuncertainty = Column(Float)
+    b_confidencelevel = Column(Float)
+
+    a_value = Column(Float, nullable=False)
+    a_uncertainty = Column(Float)
+    a_loweruncertainty = Column(Float)
+    a_upperuncertainty = Column(Float)
+    a_confidencelevel = Column(Float)
+
+    mc_value = Column(Float, nullable=False)
+    mc_uncertainty = Column(Float)
+    mc_loweruncertainty = Column(Float)
+    mc_upperuncertainty = Column(Float)
+    mc_confidencelevel = Column(Float)
 
     reservoir_id = Column(Integer, ForeignKey('reservoir.oid'))
     reservoir = relationship('ramsis.sfm.worker.orm.Reservoir',
@@ -162,11 +171,12 @@ class Reservoir(LastSeenMixin, ORMBase):
     RAMSIS worker reservoir geometry ORM mapping.
     """
     parent_ref = Column(Integer, ForeignKey('reservoir.oid'))
-    geom = Column(Geometry(geometry_type='GEOMETRYZ', dimension=3),
-                  nullable=False)
+    geom = Column(Geometry(geometry_type='GEOMETRYZ', dimension=3,
+                  management=True), nullable=False)
 
     samples = relationship('ramsis.sfm.worker.orm.ModelResultSample',
-                           back_populates='reservoir')
+                           back_populates='reservoir',
+                           order_by='ModelResultSample.starttime')
 
     sub_geometries = relationship('ramsis.sfm.worker.orm.Reservoir')
 

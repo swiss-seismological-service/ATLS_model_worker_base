@@ -4,11 +4,11 @@ Extensions for miscellaneous entities.
 """
 
 import warnings
+from osgeo import ogr, osr
+from pyproj import Proj, transform as _transform
 
 from ramsis.utils.error import ErrorWithTraceback
 
-from osgeo import ogr, osr
-from pyproj import Proj, transform as _transform
 
 # DEFAULT_PROJ = '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs'
 DEFAULT_PROJ = ''
@@ -103,7 +103,3 @@ class CoordinateMixin(object):
                 'Projection currently not taken into consideration.')
         # TODO(damb): Take the projection into consideration.
         return 'POINT Z (%f %f %f)' % self._x, self._y, self._z
-
-    def __repr__(self):
-        return '<CoordinateMixin(x=%s, y=%s, z=%s)>' % (
-            self._x, self._y, self._z)

@@ -36,14 +36,14 @@ _install_requires = [
     'Flask>=0.12.2',
     'Flask-RESTful>=0.3.6',
     'Flask-SQLAlchemy>=2.3.2',
-    'GDAL==2.2.3',
     'geoalchemy2>=0.6.1',
-    'marshmallow>=3.0.0rc8',
+    'marshmallow>=3.2.1',
     'numpy==1.15',
     'python-dateutil>=2.8.0',
     "ramsis.utils==0.1",
     "SQLAlchemy>=1.2.10",
-    'webargs>=5.3.2', ]
+    "GDAL==2.2.3",
+    "webargs>=5.3.2", ]
 
 _extras_require = {
     'doc': [
@@ -65,7 +65,7 @@ _version = get_version(os.path.join('ramsis', 'sfm', 'worker', '__init__.py'))
 _description = ('RT-RAMSIS worker component.')
 _packages = ['ramsis.sfm.worker',
              'ramsis.sfm.worker.utils', ]
-
+_namespace_packages = ['ramsis', 'ramsis.sfm']
 # ----------------------------------------------------------------------------
 setup(
     name=_name,
@@ -97,6 +97,7 @@ setup(
         'Topic :: Scientific/Engineering', ],
     platforms=['Linux', ],
     packages=_packages,
+    namespace_packages=_namespace_packages,
     data_files=_data_files,
     install_requires=_install_requires,
     extras_require=_extras_require,

@@ -18,7 +18,6 @@ from ramsis.sfm.worker.utils import (escape_newline, ContextLoggerAdapter,
                                      StatusCode)
 
 
-# -----------------------------------------------------------------------------
 class TaskError(ErrorWithTraceback):
     """Base task error ({})."""
 
@@ -141,6 +140,7 @@ class Task(object):
                 one()
 
         session = Session()
+
         m_task_available = True
         # XXX(damb): fetch orm.Task from DB and update task state
         try:
@@ -169,14 +169,14 @@ class Task(object):
         session = Session()
         try:
             m_task = task_from_db(session, self.id)
+
             m_task.status = retval.status
+
             m_task.status_code = retval.status_code
+
             m_task.warning = retval.warning
-
             if retval.status_code == 200:
-                m_task.result = (retval.data[self.id]
-                                 if self.id in retval.data else retval.data)
-
+                m_task.result = retval.data.get("reservoir")
             session.commit()
 
         except NoResultFound as err:
@@ -186,7 +186,7 @@ class Task(object):
             session.rollback()
             raise err
         else:
-            self.logger.debug(f"Task successfully written.")
+            self.logger.info("Task successfully written.")
         finally:
             session.close()
 
