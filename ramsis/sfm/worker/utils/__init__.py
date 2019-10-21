@@ -141,7 +141,7 @@ class SchemaBase(Schema):
         for k, v in data.items():
             t = retval
             prev = None
-            if k in ['status_code']:
+            if k in ['status_code', 'sub_geometries']:
                 t.setdefault(k, v)
                 continue
             for part in k.split(sep):
