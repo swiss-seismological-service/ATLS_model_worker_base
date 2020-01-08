@@ -2,10 +2,10 @@
 """
 Task facilities.
 """
-
 import functools
 import logging
 import uuid
+import logging.handlers
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -105,14 +105,13 @@ class Task(object):
 
     LOGGER = 'ramsis.sfm.worker.task'
 
-    def __init__(self, db_url, model, task_id=None, **kwargs):
-        self._logger = logging.getLogger(self.LOGGER)
-        self.logger = ContextLoggerAdapter(self._logger, {'ctx': task_id})
+    def __init__(self, db_url, model, queue, task_id=None, **kwargs):
 
         self._db_url = db_url
         self._model = model
         self._task_id = task_id if task_id is not None else uuid.uuid4()
         self._task_args = kwargs
+        self.queue = queue
 
     @property
     def id(self):
@@ -130,6 +129,11 @@ class Task(object):
 
     @with_exception_handling
     def __call__(self, **kwargs):
+        qh = logging.handlers.QueueHandler(self.queue)
+        self._logger = logging.getLogger(self.LOGGER)
+        self._logger.addHandler(qh)
+        self.logger = ContextLoggerAdapter(self._logger,
+                                           {'ctx': self._task_id})
 
         engine = create_engine(self._db_url, poolclass=NullPool)
         Session = sessionmaker(bind=engine)
@@ -147,7 +151,6 @@ class Task(object):
             m_task = task_from_db(session, self.id)
             m_task.status = StatusCode.TaskProcessing.name
             m_task.status_code = StatusCode.TaskProcessing.value
-
             session.commit()
 
         except NoResultFound as err:
@@ -165,7 +168,6 @@ class Task(object):
 
         retval = self._run(**kwargs)
 
-        self.logger.debug(f"Writing results to DB ...")
         session = Session()
         try:
             m_task = task_from_db(session, self.id)

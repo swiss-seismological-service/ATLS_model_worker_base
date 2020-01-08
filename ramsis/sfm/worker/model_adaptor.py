@@ -148,5 +148,6 @@ class ModelAdaptor(object):
                 if d['context'] and 'task' in d['context']
                 else {'ctx': d['_name']})
             self.__dict__.update(d)
+
     def __repr__(self):
         return '<{}(name={})>'.format(type(self).__name__, self.NAME)

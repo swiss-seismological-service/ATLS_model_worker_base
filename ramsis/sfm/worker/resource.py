@@ -7,7 +7,8 @@ import functools
 import logging
 import uuid
 
-from multiprocessing import Process
+from multiprocessing import Process, Queue
+import threading
 
 from flask import request, current_app, g
 from flask import make_response as _make_response
@@ -204,6 +205,18 @@ class SFMRamsisWorkerResource(RamsisWorkerBaseResource):
         """
         return uuid.UUID(task_id)
 
+class LoggerThread:
+    def __init__(self, queue):
+        self.queue = queue
+
+    def add_process_log(self, queue):
+        self.queue = queue
+        while True:
+            record = self.queue.get()
+            if record is None:
+                break
+            logger = logging.getLogger(record.name)
+            logger.handle(record)
 
 class SFMRamsisWorkerListResource(RamsisWorkerBaseResource):
     """
@@ -216,6 +229,9 @@ class SFMRamsisWorkerListResource(RamsisWorkerBaseResource):
         super().__init__(db=db)
 
         self._model = model
+        self.queue = Queue(-1)
+        self.logger_thread = LoggerThread(self.queue)
+        self.workers = []
 
     @property
     def request_id(self):
@@ -292,19 +308,24 @@ class SFMRamsisWorkerListResource(RamsisWorkerBaseResource):
         self.logger.debug(
             f"Executing {self._model!r} task ({task_id}) "
             f"with parameters {args!r} ...")
-
         # create a task; inject model_default parameters
         t = Task(
             db_url=current_app.config['SQLALCHEMY_DATABASE_URI'],
             model=self._model(context={'task': task_id},
                               **current_app.config['RAMSIS_SFM_DEFAULTS']),
+            queue=self.queue,
             task_id=task_id, **args['data']['attributes'])
 
         p = Process(target=t)
+        self.workers.append(p)
+        self.logger.info(f"Start Process with target={t}")
         p.start()
+        lp = threading.Thread(target=self.logger_thread.add_process_log,
+                              args=(self.queue,))
         # XXX(damb): Do not call p.join() in order to achieve async behaviour.
         # Instead the DB backend is used to keep data in sync.
 
+        lp.start()
         msg = ResponseData.accepted(task_id)
         self.logger.debug('Task ({}) accepted.'.format(task_id))
 
