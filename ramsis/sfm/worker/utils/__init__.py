@@ -215,13 +215,24 @@ class ReservoirSchema(SchemaBase):
     """
     Schema representation for a reservoir.
     """
+    # XXX(damb): WKT/WKB
+    geom = fields.String()
     samples = fields.Nested(ModelResultSampleSchema, many=True)
-    x_min = fields.Float()
-    x_max = fields.Float()
-    y_min = fields.Float()
-    y_max = fields.Float()
-    z_min = fields.Float()
-    z_max = fields.Float()
+    sub_geometries = fields.Nested('self', many=True)
+
+    @post_dump(pass_original=True)
+    def geom_as_wkt(self, data, orig, **kwargs):
+        """
+        Use the :code:`WKT` representation of the reservoir geometry instead of
+        :code:`WKB`.
+        """
+        data["samples"] = [v for v in data["samples"] if v]
+        try:
+            data['geom'] = orig.wkt()
+        except AttributeError:
+            pass
+
+        return data
 
 
 class SFMWorkerResponseDataAttributesSchema(SchemaBase):
