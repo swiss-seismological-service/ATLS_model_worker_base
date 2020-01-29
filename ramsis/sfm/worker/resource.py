@@ -314,6 +314,8 @@ class SFMRamsisWorkerListResource(RamsisWorkerBaseResource):
             model=self._model(context={'task': task_id},
                               **current_app.config['RAMSIS_SFM_DEFAULTS']),
             queue=self.queue,
+            logging_config_path = current_app.config['PATH_LOGGING_CONFIG'],
+            log_id=current_app.config['LOG_ID'],
             task_id=task_id, **args['data']['attributes'])
 
         p = Process(target=t)

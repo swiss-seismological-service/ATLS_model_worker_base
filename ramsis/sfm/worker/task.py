@@ -12,6 +12,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.pool import NullPool
 
+from ramsis.utils.app import setup_logger
 from ramsis.utils.error import ErrorWithTraceback
 from ramsis.sfm.worker import orm
 from ramsis.sfm.worker.utils import (escape_newline, ContextLoggerAdapter,
@@ -105,13 +106,15 @@ class Task(object):
 
     LOGGER = 'ramsis.sfm.worker.task'
 
-    def __init__(self, db_url, model, queue, task_id=None, **kwargs):
+    def __init__(self, db_url, model, queue,  logging_config_path, log_id, task_id=None, **kwargs):
 
         self._db_url = db_url
         self._model = model
         self._task_id = task_id if task_id is not None else uuid.uuid4()
         self._task_args = kwargs
         self.queue = queue
+        self.logging_config_path = logging_config_path
+        self.log_id = log_id
 
     @property
     def id(self):
@@ -129,9 +132,9 @@ class Task(object):
 
     @with_exception_handling
     def __call__(self, **kwargs):
+        setup_logger(self.logging_config_path, self.log_id)
         qh = logging.handlers.QueueHandler(self.queue)
         self._logger = logging.getLogger(self.LOGGER)
-        self._logger.addHandler(qh)
         self.logger = ContextLoggerAdapter(self._logger,
                                            {'ctx': self._task_id})
 
