@@ -6,12 +6,10 @@ ORM facilities.
 import datetime
 import uuid
 
-from geoalchemy2 import Geometry
-from osgeo import ogr
 from sqlalchemy import Column, Integer, Float, String, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declared_attr, declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 from sqlalchemy.types import TypeDecorator, CHAR
 
 from ramsis.sfm.worker.utils import StatusCode
@@ -89,7 +87,7 @@ class Task(LastSeenMixin, ORMBase):
     result = relationship("ramsis.sfm.worker.orm.Reservoir", uselist=False,
                           cascade="all, delete, delete-orphan",
                           single_parent=True,
-                          order_by='Reservoir.parent_ref')
+                          order_by='Reservoir.parentref')
 
     model = relationship("ramsis.sfm.worker.orm.Model",
                          back_populates="tasks",
@@ -170,24 +168,31 @@ class Reservoir(LastSeenMixin, ORMBase):
     """
     RAMSIS worker reservoir geometry ORM mapping.
     """
-    parent_ref = Column(Integer, ForeignKey('reservoir.oid'))
-    geom = Column(Geometry(geometry_type='GEOMETRYZ', dimension=3,
-                  management=True), nullable=False)
+    oid = Column(Integer, primary_key=True)
+    parentref = Column(Integer, ForeignKey('reservoir.oid'))
+
+    x_min = Column(Float)
+    x_max = Column(Float)
+    y_min = Column(Float)
+    y_max = Column(Float)
+    z_min = Column(Float)
+    z_max = Column(Float)
 
     samples = relationship('ramsis.sfm.worker.orm.ModelResultSample',
                            back_populates='reservoir',
                            order_by='ModelResultSample.starttime')
 
-    sub_geometries = relationship('ramsis.sfm.worker.orm.Reservoir')
-
-    def wkt(self):
-        try:
-            return ogr.CreateGeometryFromWkb(
-                self.geom._data_from_desc(self.geom.desc)).ExportToWkt()
-        except AttributeError:
-            return self.geom
+    subgeometries = relationship('ramsis.sfm.worker.orm.Reservoir',
+                                 backref=backref('parent', remote_side=[oid]))
 
     def __repr__(self):
-        return "<{}(geom={}, sub_geoms={})>".format(type(self).__name__,
-                                                    self.wkt(),
-                                                    self.sub_geometries)
+        return ("<{}(x_min={}, x_max={}, y_min={}, y_max={}, z_min={}, "
+                "z_max={}, sub_geoms={})>".format(
+                    type(self).__name__,
+                    self.x_min,
+                    self.x_max,
+                    self.y_min,
+                    self.y_max,
+                    self.z_min,
+                    self.z_max,
+                    self.subgeometries))

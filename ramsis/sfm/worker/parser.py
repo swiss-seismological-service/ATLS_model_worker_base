@@ -7,7 +7,7 @@ import base64
 import re
 import datetime
 from marshmallow import (fields, pre_load, validates_schema,
-                         ValidationError, utils)
+                         ValidationError, utils, post_load)
 import dateutil.parser
 from webargs.flaskparser import abort
 from webargs.flaskparser import parser as _parser
@@ -295,9 +295,29 @@ class ReservoirSchema(SchemaBase):
     """
     Schema representation of a reservoir to be forecasted.
     """
-    # XXX(damb): WKT/WKB
-    geom = fields.String(required=True)
+    x = fields.List(fields.Float(), required=True)
+    y = fields.List(fields.Float(), required=True)
+    z = fields.List(fields.Float(), required=True)
 
+    @pre_load
+    def validate_geom(self, data, **kwargs):
+        assert set(['x', 'y', 'z']) <= set(data.keys())
+        for dim in ['x', 'y', 'z']:
+            val_list = data[dim]
+            assert isinstance(val_list, list), ("Dimensional list length "
+                                                "must equal or exceed 2")
+            # Check that the values in each list are strictly increasing
+            # Same numbers are not allowed as that would create zero-width
+            # subgeometries.
+            assert all(x < y for x, y in zip(val_list, val_list[1:]))
+            assert len(val_list) >= 2
+        return data
+
+class GeomSchema(SchemaBase):
+    """
+    Schema representing the geometry of a reservoir.
+    """
+    geom = fields.Nested(ReservoirSchema)
 
 class ModelParameterSchemaBase(SchemaBase):
     """
@@ -308,6 +328,10 @@ class ModelParameterSchemaBase(SchemaBase):
     datetime_end = UTCDateTime('utc_isoformat', required=True)
     epoch_duration = fields.Float()
 
+class ReferencePointSchema(SchemaBase):
+    
+        x = fields.Float(required=True)
+        y = fields.Float(required=True)
 
 def create_sfm_worker_imessage_schema(
         model_parameters_schema=ModelParameterSchemaBase):
@@ -327,13 +351,18 @@ def create_sfm_worker_imessage_schema(
 
             With the current protocol version only a single well is supported.
         """
+        spatialreference = fields.String(required=True)
+        referencepoint = fields.Nested(ReferencePointSchema)
         seismic_catalog = fields.Nested(SeismicCatalogSchema, required=True)
         # NOTE(damb): A well comes along with its hydraulics.
         well = fields.Nested(BoreholeSchema, required=True)
         scenario = fields.Nested(ScenarioSchema, required=True)
-        reservoir = fields.Nested(ReservoirSchema, required=True)
+        reservoir = fields.Nested(GeomSchema, required=True)
         model_parameters = fields.Nested(model_parameters_schema,
                                          required=True)
+        @post_load
+        def pre_load(self, data, **kwargs):
+            return data
 
     class _SFMWorkerRunsSchema(SchemaBase):
         type = fields.Str(missing='runs')
