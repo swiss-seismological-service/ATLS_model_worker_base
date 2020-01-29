@@ -2,19 +2,20 @@
 """
 Extensions for miscellaneous entities.
 """
-
+from copy import deepcopy
 import warnings
 from osgeo import ogr, osr
-from pyproj import Proj, transform as _transform
+from pyproj import Transformer
 
 from ramsis.utils.error import ErrorWithTraceback
+from ramsis.sfm.worker.orm import Reservoir
 
 
 # DEFAULT_PROJ = '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs'
 DEFAULT_PROJ = ''
 
 
-def transform(x, y, z, p1_proj4, p2_proj4):
+def transform(x, y, source_proj, target_proj=4326):
     """
     Transform coordinates from a coordinate system defined by :code:`p1_proj4`
     to the coordinate system defined by :code:`p2_proj4`.
@@ -22,23 +23,19 @@ def transform(x, y, z, p1_proj4, p2_proj4):
     :param x: X-value of coordinate to be transformed
     :param y: Y-value of coordinate to be transformed
     :param z: Z-value of coordinate to be transformed
-    :param str p2_proj4: `PROJ.4 <https://proj4.org/>`_ project string
+    :param str target_proj: `PROJ.4 <https://proj4.org/>`_ project string
         defining the target coordinate system. When e.g. transforming into a
         local *NED* coordinate system a string such as :code:`+proj=etmerc
         +ellps=WSG84 +lon_0=<observer_lon> +lat_0=<observer_lat> +x_0=0 +y_0=0
         +z_0=<observer_alt> +k_0=1 +units=m +axis=ned` might give a good
         approximation.
-    :param str p1_proj4: `PROJ.4 <https://proj4.org/>`_ project string
+    :param str source_proj: `PROJ.4 <https://proj4.org/>`_ project string
         describing the source coordinate system
-
-    :code:`x`,:code:`y` and :code:`z` can be `numpy <http://www.numpy.org/>`_
-    or regular python arrays, python lists/tuples or scalars. Arrays are
-    fastest.
     """
-    p1 = Proj(p1_proj4)
-    p2 = Proj(p2_proj4)
+    transformer = Transformer.from_proj(source_proj, target_proj)
 
-    return _transform(p1, p2, x, y, z)
+    lon, lat = transformer.transform(x, y)
+    return lat, lon
 
 
 # -----------------------------------------------------------------------------
@@ -103,3 +100,46 @@ class CoordinateMixin(object):
                 'Projection currently not taken into consideration.')
         # TODO(damb): Take the projection into consideration.
         return 'POINT Z (%f %f %f)' % self._x, self._y, self._z
+
+
+def single_reservoir_result(geom, samples):
+    """
+    Function to create a single reservoir with results when
+    a single result set should be used for the entire geometry.
+    """
+    reservoir = Reservoir(z_min=min(geom["z"]),
+                          z_max=max(geom["z"]),
+                          y_min=min(geom["y"]),
+                          y_max=max(geom["y"]),
+                          x_min=min(geom["x"]),
+                          x_max=max(geom["x"]),
+                          samples=deepcopy(samples))
+    return reservoir
+
+
+def subgeoms_for_single_result(geom, samples):
+    """
+    Function to create a reservoir with sub geometries when
+    a single result set should be used for the entire geometry.
+    """
+    def tuples_for_list(d_list):
+        return [(d_list[i], d_list[i + 1]) for i in range(len(d_list) - 1)]
+    subgeoms = []
+
+    for x_tup in tuples_for_list(geom['x']):
+        x_min = x_tup[0]
+        x_max = x_tup[1]
+        for y_tup in tuples_for_list(geom['y']):
+            y_min = y_tup[0]
+            y_max = y_tup[1]
+            for z_tup in tuples_for_list(geom['z']):
+                z_min = z_tup[0]
+                z_max = z_tup[1]
+                subgeoms.append(Reservoir(x_min=x_min,
+                                          x_max=x_max,
+                                          y_min=y_min,
+                                          y_max=y_max,
+                                          z_min=z_min,
+                                          z_max=z_max,
+                                samples=deepcopy(samples)))
+    return Reservoir(subgeometries=subgeoms)
