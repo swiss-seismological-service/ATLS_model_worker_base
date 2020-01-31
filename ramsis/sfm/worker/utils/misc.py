@@ -34,8 +34,8 @@ def transform(x, y, source_proj, target_proj=4326):
     """
     transformer = Transformer.from_proj(source_proj, target_proj)
 
-    lon, lat = transformer.transform(x, y)
-    return lat, lon
+    lat, lon = transformer.transform(x, y)
+    return lon, lat
 
 
 # -----------------------------------------------------------------------------
