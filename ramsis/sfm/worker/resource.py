@@ -285,8 +285,8 @@ class SFMRamsisWorkerListResource(RamsisWorkerBaseResource):
             existing_m_model = \
                 session.query(orm.Model).\
                 filter(orm.Model.name == m_model.name).\
-                filter(orm.Model.description == m_model.description).\
                 one_or_none()
+            print("Does the model exist?", existing_m_model)
 
             if existing_m_model:
                 m_model = existing_m_model
