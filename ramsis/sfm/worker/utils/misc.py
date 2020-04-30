@@ -102,7 +102,7 @@ class CoordinateMixin(object):
         return 'POINT Z (%f %f %f)' % self._x, self._y, self._z
 
 
-def single_reservoir_result(geom, samples):
+def single_reservoir_result(geom, samples, subgeoms=None):
     """
     Function to create a single reservoir with results when
     a single result set should be used for the entire geometry.
@@ -113,7 +113,8 @@ def single_reservoir_result(geom, samples):
                           y_max=max(geom["y"]),
                           x_min=min(geom["x"]),
                           x_max=max(geom["x"]),
-                          samples=deepcopy(samples))
+                          samples=deepcopy(samples),
+                          subgeometries=subgeoms)
     return reservoir
 
 
@@ -143,3 +144,19 @@ def subgeoms_for_single_result(geom, samples):
                                           z_max=z_max,
                                 samples=deepcopy(samples)))
     return Reservoir(subgeometries=subgeoms)
+
+
+def subgeom_reservoir_result(x_min, x_max, y_min, y_max,
+                             z_min, z_max, samples):
+    """
+    Function to create a single reservoir with results when
+    a single result set should be used for the entire geometry.
+    """
+    reservoir = Reservoir(z_min=z_min,
+                          z_max=z_max,
+                          y_min=y_min,
+                          y_max=y_max,
+                          x_min=x_min,
+                          x_max=x_max,
+                          samples=samples)
+    return reservoir
