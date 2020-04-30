@@ -222,6 +222,8 @@ class ReservoirSchema(SchemaBase):
     y_max = fields.Float()
     z_min = fields.Float()
     z_max = fields.Float()
+    subgeometries = fields.Nested(
+        "self", exclude=('subgeometries',), many=True)
 
 
 class SFMWorkerResponseDataAttributesSchema(SchemaBase):
