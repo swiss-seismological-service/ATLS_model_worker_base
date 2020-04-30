@@ -127,15 +127,15 @@ class ModelResultSample(ORMBase):
     """
     ORM mapping representing a single sample of a model result.
     """
-    starttime = Column(DateTime)
-    endtime = Column(DateTime)
-    numberevents_value = Column(Float, nullable=False)
+    starttime = Column(DateTime, nullable=False)
+    endtime = Column(DateTime, nullable=False)
+    numberevents_value = Column(Float)
     numberevents_uncertainty = Column(Float)
     numberevents_loweruncertainty = Column(Float)
     numberevents_upperuncertainty = Column(Float)
     numberevents_confidencelevel = Column(Float)
 
-    hydraulicvol_value = Column(Float, nullable=False)
+    hydraulicvol_value = Column(Float)
     hydraulicvol_uncertainty = Column(Float)
     hydraulicvol_loweruncertainty = Column(Float)
     hydraulicvol_upperuncertainty = Column(Float)
