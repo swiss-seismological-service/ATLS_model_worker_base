@@ -2,7 +2,7 @@
 """
 General purposes RT-RAMSIS model facilities.
 """
-
+import traceback
 import functools
 import logging
 
@@ -35,7 +35,8 @@ def with_exception_handling(func):
             return func(self, *args, **kwargs)
         except Exception as err:
             msg = 'ModelError ({}-{}): {}'.format(type(self).__name__,
-                                                  type(err).__name__, err)
+                                                  type(err).__name__, err,
+                                                  traceback.format_exc())
 
             self.logger.critical(escape_newline(msg))
             # XXX(damb): The decorator must return its result in a specific
