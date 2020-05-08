@@ -1,27 +1,21 @@
+## Information for model integration
+
+For detailed information on how to integrate a model to RAMSIS using this repository, view the [wiki](https://gitlab.seismo.ethz.ch/indu/ramsis.sfm.worker/-/wikis/Getting-Started).
+
+It is not expected that a model creator implement this worker by themselves. This repository contains common code that every model requires, and will only need to be updated if many models require the same code to avoid repetition.
+
+The RAMSIS developer (currently Laura Sarson) will on request, create a repository based on an existing model implementation called `ramsis.sfm.[model name]`
+Both the `ramsis.sfm.worker` and `ramsis.sfm.[model name]` repositories need to be checked out and installed in an environment (either linux or windows) to run the model for RAMSIS.
+
+For any questions please contact Laura at laura.sarson@sed.ethz.ch or Philipp at kaestli@sed.ethz.ch
+
 # RT-RAMSIS SFM-Worker Components
 
-## Installation
-
-Make sure that the following dependencies are installed:
-
-* libpq-dev
-* libgdal-dev
-
-Next, invoke:
-
-```
-pip install -r requirements.txt
-```
-
-Note, that encapsulating the installation by means of a [virtual
-environment](https://docs.python.org/3/tutorial/venv.html) is strongly
-recommended.
-
-## Concept
+## Concept of structure
 
 `RT-RAMSIS` SFM-Workers wrap forecast models providing a RESTful API.
 SFM-Workers handle requests, control the forecast computation and both return
-and delete results when requested. Workers are implemented as stateless
+results when requested. Workers are implemented as stateless
 webservices using the [Flask](http://flask.pocoo.org/) framework.
 
 A worker basically consists of the following parts:
@@ -65,3 +59,23 @@ exemplary concrete implemention of an asynchronous worker implementing the Flask
 [Blueprint](https://flask.pocoo.org/docs/blueprints/) approach. The source code
 is located at the
 [ramsis.sfm.em1](https://gitlab.seismo.ethz.ch/indu/ramsis.sfm.em1) package.
+
+
+## Installation
+
+Make sure that the following dependencies are installed:
+
+* libpq-dev
+* libgdal-dev
+
+Next, invoke:
+
+```
+pip install -e .
+```
+To install the code in an editable mode.
+
+Note, that encapsulating the installation by means of a [virtual
+environment](https://docs.python.org/3/tutorial/venv.html) is strongly
+recommended.
+
