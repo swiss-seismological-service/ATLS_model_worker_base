@@ -4,8 +4,8 @@ For detailed information on how to integrate a model to RAMSIS using this reposi
 
 It is not expected that a model creator implement this worker by themselves. This repository contains common code that every model requires, and will only need to be updated if many models require the same code to avoid repetition.
 
-The RAMSIS developer (currently Laura Sarson) will on request, create a repository based on an existing model implementation called ramsis.sfm.[model name]
-Both the ramsis.sfm.worker and ramsis.sfm.[model name] repositories need to be checked out and installed in an environment (either linux or windows) to run the model for RAMSIS.
+The RAMSIS developer (currently Laura Sarson) will on request, create a repository based on an existing model implementation called `ramsis.sfm.[model name]`
+Both the `ramsis.sfm.worker` and `ramsis.sfm.[model name]` repositories need to be checked out and installed in an environment (either linux or windows) to run the model for RAMSIS.
 
 For any questions please contact Laura at laura.sarson@sed.ethz.ch or Philipp at kaestli@sed.ethz.ch
 
