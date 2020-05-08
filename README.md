@@ -1,6 +1,6 @@
 ## Information for model integration
 
-For detailed information on how to integrate a model to RAMSIS using this repository, view the [wiki](https://gitlab.seismo.ethz.ch/indu/ramsis.sfm.worker/-/wikis/docs/ModelIntegration/Getting-Started).
+For detailed information on how to integrate a model to RAMSIS using this repository, view the [wiki](https://gitlab.seismo.ethz.ch/indu/ramsis.sfm.worker/-/wikis/Getting-Started).
 
 It is not expected that a model creator implement this worker by themselves. This repository contains common code that every model requires, and will only need to be updated if many models require the same code to avoid repetition.
 
