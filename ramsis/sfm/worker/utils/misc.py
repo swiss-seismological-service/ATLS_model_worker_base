@@ -2,6 +2,7 @@
 """
 Extensions for miscellaneous entities.
 """
+from pandas import DataFrame
 from copy import deepcopy
 import warnings
 from osgeo import ogr, osr
@@ -32,9 +33,9 @@ def transform(x, y, source_proj, target_proj=4326):
     :param str source_proj: `PROJ.4 <https://proj4.org/>`_ project string
         describing the source coordinate system
     """
-    transformer = Transformer.from_proj(source_proj, target_proj)
+    transformer = Transformer.from_proj(source_proj, target_proj, always_xy=True)
 
-    lat, lon = transformer.transform(x, y)
+    lon, lat = transformer.transform(x, y)
     return lon, lat
 
 
@@ -102,7 +103,7 @@ class CoordinateMixin(object):
         return 'POINT Z (%f %f %f)' % self._x, self._y, self._z
 
 
-def single_reservoir_result(geom, samples, subgeoms=None):
+def single_reservoir_result(geom, samples, subgeoms=[]):
     """
     Function to create a single reservoir with results when
     a single result set should be used for the entire geometry.
