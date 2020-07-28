@@ -141,28 +141,47 @@ class ModelResultSample(ORMBase):
     hydraulicvol_upperuncertainty = Column(Float)
     hydraulicvol_confidencelevel = Column(Float)
 
-    b_value = Column(Float, nullable=False)
+    b_value = Column(Float)
     b_uncertainty = Column(Float)
     b_loweruncertainty = Column(Float)
     b_upperuncertainty = Column(Float)
     b_confidencelevel = Column(Float)
 
-    a_value = Column(Float, nullable=False)
+    a_value = Column(Float)
     a_uncertainty = Column(Float)
     a_loweruncertainty = Column(Float)
     a_upperuncertainty = Column(Float)
     a_confidencelevel = Column(Float)
 
-    mc_value = Column(Float, nullable=False)
+    mc_value = Column(Float)
     mc_uncertainty = Column(Float)
     mc_loweruncertainty = Column(Float)
     mc_upperuncertainty = Column(Float)
     mc_confidencelevel = Column(Float)
 
+    discretemfd_id = Column(Integer, ForeignKey('discretemfd.oid'))
+    discretemfd = relationship('ramsis.sfm.worker.orm.DiscreteMFD')
+
     reservoir_id = Column(Integer, ForeignKey('reservoir.oid'))
     reservoir = relationship('ramsis.sfm.worker.orm.Reservoir',
                              back_populates='samples')
 
+class DiscreteMFD(ORMBase):
+    minmag = Column(Float)
+    maxmag = Column(Float)
+    binwidth = Column(Float)
+    magbins = relationship('ramsis.sfm.worker.orm.MFDBin')
+
+
+class MFDBin(ORMBase):
+    referencemagnitude = Column(Float)
+    # event number per year
+    eventnumber_value = Column(Float)
+    # Might change uncertainty
+    eventnumber_uncertainty = Column(Float)
+    discretemfd_id = Column(Integer, ForeignKey('discretemfd.oid'))
+    discretemfd = relationship('ramsis.sfm.worker.orm.DiscreteMFD',
+                               back_populates='magbins')
 
 class Reservoir(LastSeenMixin, ORMBase):
     """

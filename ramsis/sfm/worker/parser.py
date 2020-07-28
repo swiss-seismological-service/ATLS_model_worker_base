@@ -4,6 +4,7 @@ Parsing facilities for worker webservices.
 """
 
 import base64
+import logging
 import re
 import datetime
 from marshmallow import (fields, pre_load,
@@ -20,6 +21,7 @@ from ramsis.sfm.worker.utils import (StatusCode, SchemaBase,
                                      validate_longitude,
                                      validate_latitude)
 
+logger = logging.getLogger('ramsis.sfm.worker.parser')
 
 Latitude = partial(fields.Float, validate=validate_latitude)
 RequiredLatitude = partial(Latitude, required=True)
@@ -331,13 +333,25 @@ class ReferencePointSchema(SchemaBase):
 
 
 def create_sfm_worker_imessage_schema(
-        model_parameters_schema=ModelParameterSchemaBase):
+        model_parameters_schema=ModelParameterSchemaBase,
+        config={'seismic_catalog': 'required',
+                'well': 'required',
+                'scenario': 'required'}):
     """
     Factory function for a SFM worker :code:`runs/` input message schema.
 
     :param model_parameters_schema: Schema for model parameters.
     :type model_parameters_schema: :py:class:`marshmallow.Schema`
+    :param config: Config for required, optional, ignored, not_allowed
+        for each data attribute found in _SFMWorkerRunsAttributeSchema
+        required keys: 'seismic_catalog', 'well', 'scenario'
+    :type config: dict
     """
+    assert all(key for key in ['seismic_catalog', 'well', 'scenario']
+               if key in config.keys()), "config keys missing."
+    bool_config = dict()
+    for key, item in config.items():
+        bool_config[key] = True if item == 'required' else False
 
     class _SFMWorkerRunsAttributesSchema(SchemaBase):
         """
@@ -350,16 +364,27 @@ def create_sfm_worker_imessage_schema(
         """
         spatialreference = fields.String(required=True)
         referencepoint = fields.Nested(ReferencePointSchema)
-        seismic_catalog = fields.Nested(SeismicCatalogSchema, required=True)
+        seismic_catalog = fields.Nested(SeismicCatalogSchema, required=bool_config['seismic_catalog'])
         # NOTE(damb): A well comes along with its hydraulics.
-        well = fields.Nested(BoreholeSchema, required=True)
-        scenario = fields.Nested(ScenarioSchema, required=True)
+        well = fields.Nested(BoreholeSchema, required=bool_config['well'])
+        scenario = fields.Nested(ScenarioSchema, required=bool_config['scenario'])
         reservoir = fields.Nested(GeomSchema, required=True)
         model_parameters = fields.Nested(model_parameters_schema,
                                          required=True)
 
         @post_load
         def pre_load(self, data, **kwargs):
+            for key, item in data.items():
+                try: config_item = config[key]
+                except KeyError: continue
+
+                if config_item == 'not_allowed':
+                    raise IOError(
+                        f"{key} is not allowed as an input by this model.")
+                elif config_item == "ignore":
+                    logger.warning(
+                        f"{key} is ignored and will be deleted from inputs.")
+                    del data[key]
             return data
 
     class _SFMWorkerRunsSchema(SchemaBase):
