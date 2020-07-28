@@ -42,7 +42,8 @@ _install_requires = [
     'python-dateutil>=2.8.0',
     "ramsis.utils==0.1",
     "SQLAlchemy>=1.2.10",
-    "webargs>=5.3.2", ]
+    "GDAL==2.2.3",
+    "webargs==5.3.2", ]
 
 _extras_require = {
     'doc': [

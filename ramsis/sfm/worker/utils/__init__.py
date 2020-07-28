@@ -165,6 +165,19 @@ class SchemaBase(Schema):
         return flattened_data
 
 
+class MFDBinSchema(SchemaBase):
+    referencemagnitude = fields.Float()
+    eventnumber_value = fields.Float()
+    eventnumber_uncertainty = fields.Float()
+
+
+class DiscreteMFDSchema(SchemaBase):
+    minmag = fields.Float()
+    maxmag = fields.Float()
+    binwidth = fields.Float()
+    magbins = fields.Nested(MFDBinSchema, many=True)
+
+
 class ModelResultSampleSchema(SchemaBase):
     """
     Schema representation for a model result sample.
@@ -201,15 +214,16 @@ class ModelResultSampleSchema(SchemaBase):
     mc_upperuncertainty = Positive()
     mc_confidencelevel = Percentage()
 
+    discretemfd = fields.Nested(DiscreteMFDSchema)
+
     @post_dump
     def postdump(self, data, **kwargs):
         return_data = {}
         # Do not return samples with NaN numberevents
-        if not isnan(data["numberevents_value"]):
-            filtered_data = self.remove_empty(data)
-            return_data = self._nest_dict(filtered_data, sep='_')
+        #if not data['numberevents_value'] or not isnan(data["numberevents_value"]):
+        filtered_data = self.remove_empty(data)
+        return_data = self._nest_dict(filtered_data, sep='_')
         return return_data
-
 
 class ReservoirSchema(SchemaBase):
     """
