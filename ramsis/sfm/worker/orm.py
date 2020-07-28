@@ -160,17 +160,19 @@ class ModelResultSample(ORMBase):
     mc_confidencelevel = Column(Float)
 
     discretemfd_id = Column(Integer, ForeignKey('discretemfd.oid'))
-    discretemfd = relationship('ramsis.sfm.worker.orm.DiscreteMFD')
+    discretemfd = relationship('ramsis.sfm.worker.orm.DiscreteMFD', lazy='selectin')
 
     reservoir_id = Column(Integer, ForeignKey('reservoir.oid'))
     reservoir = relationship('ramsis.sfm.worker.orm.Reservoir',
-                             back_populates='samples')
+                             back_populates='samples',
+                             lazy='selectin')
 
 class DiscreteMFD(ORMBase):
     minmag = Column(Float)
     maxmag = Column(Float)
     binwidth = Column(Float)
-    magbins = relationship('ramsis.sfm.worker.orm.MFDBin')
+    magbins = relationship('ramsis.sfm.worker.orm.MFDBin',
+                           lazy='selectin')
 
 
 class MFDBin(ORMBase):
@@ -181,7 +183,8 @@ class MFDBin(ORMBase):
     eventnumber_uncertainty = Column(Float)
     discretemfd_id = Column(Integer, ForeignKey('discretemfd.oid'))
     discretemfd = relationship('ramsis.sfm.worker.orm.DiscreteMFD',
-                               back_populates='magbins')
+                               back_populates='magbins',
+                               lazy='selectin')
 
 class Reservoir(LastSeenMixin, ORMBase):
     """
@@ -202,7 +205,7 @@ class Reservoir(LastSeenMixin, ORMBase):
                            order_by='ModelResultSample.starttime')
 
     subgeometries = relationship('ramsis.sfm.worker.orm.Reservoir',
-                                 backref=backref('parent', remote_side=[oid]))
+                                 backref=backref('parent', remote_side=[oid]), lazy='selectin', join_depth=1)
 
     def __repr__(self):
         return ("<{}(x_min={}, x_max={}, y_min={}, y_max={}, z_min={}, "
