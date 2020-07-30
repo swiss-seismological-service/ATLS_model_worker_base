@@ -2,7 +2,6 @@
 """
 Resource facilities for worker webservices.
 """
-
 import functools
 import logging
 import uuid
@@ -14,6 +13,7 @@ from flask import request, current_app, g
 from flask import make_response as _make_response
 from flask_restful import Resource
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.orm import selectinload
 
 from ramsis.sfm.worker import orm
 from ramsis.sfm.worker.parser import parser, SFMWorkerIMessageSchema
@@ -22,6 +22,8 @@ from ramsis.sfm.worker.utils import (StatusCode, SFMWorkerOMessageSchema,
                                      ResponseData)
 from ramsis.utils.error import Error
 
+
+logger = logging.getLogger("ramsis.sfm.worker.resource")
 
 _HTTP_OK = 200
 _HTTP_NO_CONTENT = 204
@@ -69,7 +71,9 @@ def make_response(msg, status_code=None,
 
         # XXX(damb): Wrap response with data
         msg = dict(data=msg)
+        logger.info("about to make respose with serializer")
         resp = _make_response(serializer(**kwargs).dumps(msg), status_code)
+        logger.info("finished making response with serializer")
 
     except Exception as err:
         raise WorkerError(err)
@@ -140,9 +144,23 @@ class SFMRamsisWorkerResource(RamsisWorkerBaseResource):
         session = self._db.session
         try:
             task = session.query(orm.Task).\
+                options(
+                    selectinload(orm.Task.result).
+                    selectinload(orm.Reservoir.samples).
+                    selectinload(orm.ModelResultSample.discretemfd).
+                    selectinload(orm.DiscreteMFD.magbins)).\
+                options(
+                    selectinload(orm.Task.result).
+                    selectinload(orm.Reservoir.subgeometries).
+                    selectinload(orm.Reservoir.samples).
+                    selectinload(orm.ModelResultSample.discretemfd).
+                    selectinload(orm.DiscreteMFD.magbins)).\
+                options(
+                    selectinload(orm.Task.result).
+                    selectinload(orm.Reservoir.subgeometries).
+                    selectinload(orm.Reservoir.subgeometries)).\
                 filter(orm.Task.id == task_id).\
                 one()
-
             msg = ResponseData.from_task(task)
             self.logger.debug(f"Response msg: {msg}")
 
