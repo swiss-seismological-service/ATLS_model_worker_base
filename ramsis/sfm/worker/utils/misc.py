@@ -2,7 +2,6 @@
 """
 Extensions for miscellaneous entities.
 """
-from pandas import DataFrame
 from copy import deepcopy
 import warnings
 from osgeo import ogr, osr
@@ -33,7 +32,8 @@ def transform(x, y, source_proj, target_proj=4326):
     :param str source_proj: `PROJ.4 <https://proj4.org/>`_ project string
         describing the source coordinate system
     """
-    transformer = Transformer.from_proj(source_proj, target_proj, always_xy=True)
+    transformer = Transformer.from_proj(source_proj, target_proj,
+                                        always_xy=True)
 
     lon, lat = transformer.transform(x, y)
     return lon, lat
@@ -114,7 +114,7 @@ def single_reservoir_result(geom, samples, subgeoms=[]):
                           y_max=max(geom["y"]),
                           x_min=min(geom["x"]),
                           x_max=max(geom["x"]),
-                          samples=deepcopy(samples),
+                          samples=samples,
                           subgeometries=subgeoms)
     return reservoir
 

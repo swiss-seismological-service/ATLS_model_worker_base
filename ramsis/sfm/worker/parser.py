@@ -6,8 +6,8 @@ Parsing facilities for worker webservices.
 import base64
 import re
 import datetime
-from marshmallow import (fields, pre_load, validates_schema,
-                         ValidationError, utils, post_load)
+from marshmallow import (fields, pre_load,
+                         utils, post_load)
 import dateutil.parser
 from webargs.flaskparser import abort
 from webargs.flaskparser import parser as _parser
@@ -275,12 +275,6 @@ class BoreholeSchema(SchemaBase):
 
     sections = fields.Nested(BoreholeSectionSchema, many=True, required=True)
 
-    @validates_schema
-    def validate_sections(self, data, **kwargs):
-        if len(data['sections']) != 1:
-            raise ValidationError(
-                'InjectionWells are required to have a single section.')
-
 
 class ScenarioSchema(SchemaBase):
     """
@@ -313,11 +307,13 @@ class ReservoirSchema(SchemaBase):
             assert len(val_list) >= 2
         return data
 
+
 class GeomSchema(SchemaBase):
     """
     Schema representing the geometry of a reservoir.
     """
     geom = fields.Nested(ReservoirSchema)
+
 
 class ModelParameterSchemaBase(SchemaBase):
     """
@@ -328,10 +324,11 @@ class ModelParameterSchemaBase(SchemaBase):
     datetime_end = UTCDateTime('utc_isoformat', required=True)
     epoch_duration = fields.Float()
 
+
 class ReferencePointSchema(SchemaBase):
-    
-        x = fields.Float(required=True)
-        y = fields.Float(required=True)
+    x = fields.Float(required=True)
+    y = fields.Float(required=True)
+
 
 def create_sfm_worker_imessage_schema(
         model_parameters_schema=ModelParameterSchemaBase):
@@ -360,6 +357,7 @@ def create_sfm_worker_imessage_schema(
         reservoir = fields.Nested(GeomSchema, required=True)
         model_parameters = fields.Nested(model_parameters_schema,
                                          required=True)
+
         @post_load
         def pre_load(self, data, **kwargs):
             return data
